@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Fast Repair · Mids</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Geist:wght@300..700&family=Geist+Mono:wght@400..600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --bg-base:#0a0a0b; --bg-elev-1:#111114; --bg-elev-2:#16161a; --bg-elev-3:#1c1c21;
+  --border:#26262c; --border-strong:#33333a;
+  --text-1:#f5f5f7; --text-2:#a8a8b0; --text-3:#6f6f78;
+  --accent:#fbbf24; --accent-ink:#0a0a0b;
+  --accent-soft:rgba(251,191,36,.12); --accent-line:rgba(251,191,36,.35);
+  --orange:#fb923c; --emerald:#34d399; --emerald-soft:rgba(52,211,153,.12);
+  --rose:#fb7185; --rose-soft:rgba(251,113,133,.12);
+  --blue:#60a5fa; --violet:#a78bfa;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:'Geist',system-ui,sans-serif;
+  background:var(--bg-base); color:var(--text-1);
+  font-size:14px; line-height:1.5;
+  font-feature-settings:"ss01","cv11"; -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+  background-image:
+    radial-gradient(1200px 600px at 80% -10%, rgba(251,191,36,.06), transparent 60%),
+    radial-gradient(800px 400px at 0% 0%, rgba(96,165,250,.04), transparent 60%);
+}
+h1,h2,h3,h4{font-family:'Bricolage Grotesque',serif;font-weight:600;letter-spacing:-.02em;margin:0}
+.mono{font-family:'Geist Mono',monospace;font-variant-numeric:tabular-nums}
+button{font-family:inherit}
+
+.login-screen{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;background:var(--bg-base);background-image:radial-gradient(800px 500px at 50% 30%,rgba(251,191,36,.08),transparent 70%),radial-gradient(600px 400px at 50% 70%,rgba(96,165,250,.04),transparent 70%)}
+.login-card{width:min(420px,calc(100% - 32px));background:var(--bg-elev-1);border:1px solid var(--border);border-radius:18px;padding:36px;box-shadow:0 24px 48px -12px rgba(0,0,0,.5)}
+.login-brand{display:flex;align-items:center;gap:14px;margin-bottom:28px}
+.brand-mark{width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--orange));display:grid;place-items:center;font-family:'Bricolage Grotesque';font-weight:800;font-size:24px;color:var(--accent-ink);box-shadow:0 4px 24px -8px rgba(251,191,36,.5),inset 0 1px 0 rgba(255,255,255,.3)}
+.login-brand .name{font-family:'Bricolage Grotesque';font-size:24px;font-weight:700;letter-spacing:-.02em;line-height:1}
+.login-brand .sub{font-family:'Geist Mono';font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.15em;margin-top:4px}
+.login-title{font-size:18px;font-weight:600;margin-bottom:6px;font-family:'Bricolage Grotesque'}
+.login-subtitle{font-size:13px;color:var(--text-3);margin-bottom:24px}
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.field label{font-size:12px;color:var(--text-2);font-weight:500}
+.field input,.field select,.field textarea{background:var(--bg-elev-2);border:1px solid var(--border);padding:11px 14px;border-radius:9px;color:var(--text-1);font-family:inherit;font-size:14px;transition:border-color .15s,background .15s;outline:none}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent-line);background:var(--bg-elev-3)}
+.field input::placeholder{color:var(--text-3)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;border-radius:9px;background:var(--bg-elev-2);border:1px solid var(--border);color:var(--text-1);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s ease}
+.btn:hover{background:var(--bg-elev-3);border-color:var(--border-strong)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+.btn-primary:hover{background:#fcd34d;border-color:#fcd34d}
+.btn-block{width:100%;padding:12px}
+.btn-danger{background:var(--rose);border-color:var(--rose);color:#fff;font-weight:600}
+.btn-danger:hover{background:#fb6378;border-color:#fb6378}
+.btn-sm{padding:6px 10px;font-size:12px;border-radius:7px}
+.login-error{font-size:12px;color:var(--rose);text-align:center;margin-top:12px;min-height:18px}
+
+.app{display:flex;min-height:100vh}
+.sidebar{width:220px;flex-shrink:0;background:var(--bg-elev-1);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+.sidebar-brand{display:flex;align-items:center;gap:12px;padding:20px 18px;border-bottom:1px solid var(--border)}
+.sidebar-brand .brand-mark{width:36px;height:36px;font-size:18px;border-radius:9px}
+.sidebar-brand .name{font-size:17px;font-weight:700;letter-spacing:-.02em;font-family:'Bricolage Grotesque'}
+.sidebar-brand .sub{font-size:10px;color:var(--text-3);font-family:'Geist Mono';text-transform:uppercase;letter-spacing:.15em;margin-top:2px}
+.nav{flex:1;padding:16px 12px;display:flex;flex-direction:column;gap:2px}
+.nav-section{font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.15em;padding:14px 10px 6px;font-weight:600}
+.nav-item{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:8px;color:var(--text-2);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;user-select:none}
+.nav-item:hover{background:var(--bg-elev-2);color:var(--text-1)}
+.nav-item.active{background:var(--accent-soft);color:var(--accent)}
+.nav-item .icon{width:16px;text-align:center;flex-shrink:0}
+.sidebar-foot{border-top:1px solid var(--border);padding:14px 16px;display:flex;align-items:center;gap:10px}
+.avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--orange));display:grid;place-items:center;flex-shrink:0;color:var(--accent-ink);font-weight:700;font-size:13px}
+.user-info{flex:1;min-width:0}
+.user-name{font-size:13px;font-weight:500;color:var(--text-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-action{font-size:11px;color:var(--text-3);cursor:pointer;background:none;border:none;padding:0}
+.user-action:hover{color:var(--rose)}
+
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:18px 28px;border-bottom:1px solid var(--border);background:var(--bg-base);position:sticky;top:0;z-index:50;backdrop-filter:blur(10px)}
+.topbar-title h2{font-size:18px;font-weight:600;font-family:'Bricolage Grotesque'}
+.topbar-title p{font-size:12px;color:var(--text-3);margin-top:2px}
+.topbar-actions{display:flex;align-items:center;gap:10px}
+.toolbar-select{background:var(--bg-elev-2);border:1px solid var(--border);padding:9px 12px;border-radius:8px;color:var(--text-1);font-family:inherit;font-size:13px;cursor:pointer}
+.status-dot{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text-2);padding:0 6px}
+.status-dot::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--text-3)}
+.status-dot.ok::before{background:var(--emerald);box-shadow:0 0 8px var(--emerald)}
+.status-dot.err::before{background:var(--rose);box-shadow:0 0 8px var(--rose)}
+.status-dot.loading::before{background:var(--accent);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+.page{flex:1;padding:28px;display:none}
+.page.active{display:block}
+
+.section-title{display:flex;align-items:baseline;gap:12px;margin:28px 0 14px}
+.section-title:first-child{margin-top:0}
+.section-title h2{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.15em;color:var(--text-2);font-family:'Geist'}
+.section-title .rule{flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent)}
+
+.kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+@media(max-width:1300px){.kpi-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:700px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:var(--bg-elev-1);border:1px solid var(--border);border-radius:14px;padding:18px 20px;position:relative;overflow:hidden;transition:all .2s}
+.kpi:hover{border-color:var(--border-strong);transform:translateY(-1px)}
+.kpi::before{content:"";position:absolute;inset:0 0 auto 0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent)}
+.kpi .label{font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.12em;font-weight:500}
+.kpi .value{font-family:'Bricolage Grotesque';font-size:30px;font-weight:600;margin-top:8px;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums}
+.kpi .value.small{font-size:24px}
+.kpi .meta{font-size:12px;color:var(--text-2);margin-top:8px;font-family:'Geist Mono'}
+.kpi.accent{background:linear-gradient(135deg,var(--accent-soft),transparent 70%)}
+.kpi.accent .value{color:var(--accent)}
+.kpi.ready .value{color:var(--emerald)}
+.kpi.pending .value{color:var(--orange)}
+
+.insight-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media(max-width:1100px){.insight-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.insight-grid{grid-template-columns:1fr}}
+.insight{background:var(--bg-elev-1);border:1px solid var(--border);border-radius:14px;padding:14px 16px;display:flex;align-items:flex-start;gap:14px}
+.insight.warn{border-color:rgba(251,113,133,.25);background:linear-gradient(135deg,var(--rose-soft),transparent 80%)}
+.insight.alert{border-color:rgba(251,146,60,.25);background:linear-gradient(135deg,rgba(251,146,60,.08),transparent 80%)}
+.insight.info{border-color:rgba(96,165,250,.2);background:linear-gradient(135deg,rgba(96,165,250,.08),transparent 80%)}
+.insight-icon{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:var(--bg-elev-3);font-size:17px;flex-shrink:0}
+.insight.warn .insight-icon{background:rgba(251,113,133,.15);color:var(--rose)}
+.insight.alert .insight-icon{background:rgba(251,146,60,.15);color:var(--orange)}
+.insight.info .insight-icon{background:rgba(96,165,250,.15);color:var(--blue)}
+.insight-body{flex:1;min-width:0}
+.insight-title{font-size:13px;font-weight:600}
+.insight-desc{font-size:12px;color:var(--text-2);margin-top:2px}
+.insight-count{font-family:'Bricolage Grotesque';font-size:22px;font-weight:600;margin-top:4px;display:block}
+
+.charts-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
+.chart-card{background:var(--bg-elev-1);border:1px solid var(--border);border-radius:14px;padding:18px}
+.chart-card h3{font-size:14px;font-weight:600;font-family:'Geist';letter-spacing:0;margin-bottom:2px}
+.chart-card .desc{font-size:12px;color:var(--text-3);margin-bottom:14px}
+.chart-wrap{position:relative;height:240px}
+.chart-wrap.tall{height:280px}
+.col-3{grid-column:span 3} .col-4{grid-column:span 4}
+.col-6{grid-column:span 6} .col-8{grid-column:span 8} .col-12{grid-column:span 12}
+@media(max-width:1300px){.col-3,.col-4{grid-column:span 6} .col-6,.col-8{grid-column:span 12}}
+@media(max-width:700px){.col-3,.col-4{grid-column:span 12}}
+
+.table-card{background:var(--bg-elev-1);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.table-toolbar{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.search-input{flex:1;min-width:240px;background:var(--bg-elev-2);border:1px solid var(--border);padding:9px 14px;border-radius:8px;color:var(--text-1);font-family:inherit;font-size:13px;outline:none}
+.search-input:focus{border-color:var(--accent-line)}
+.table-scroll{overflow:auto;max-height:720px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{position:sticky;top:0;z-index:1;background:var(--bg-elev-2);text-align:left;font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-3);padding:11px 14px;border-bottom:1px solid var(--border);cursor:pointer;user-select:none;white-space:nowrap}
+thead th:hover{color:var(--text-1)}
+thead th .sort-ind{display:inline-block;margin-left:4px;opacity:.4}
+thead th.sorted .sort-ind{opacity:1;color:var(--accent)}
+tbody td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text-1);vertical-align:top}
+tbody tr:hover{background:var(--bg-elev-2)}
+tbody tr.late td{background:rgba(251,113,133,.05)}
+tbody tr.aging td{background:rgba(251,146,60,.04)}
+.tag{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:5px;font-size:11px;font-weight:500;background:var(--bg-elev-3);border:1px solid var(--border-strong);white-space:nowrap}
+.tag.s-pronto{background:rgba(52,211,153,.12);color:var(--emerald);border-color:rgba(52,211,153,.25)}
+.tag.s-processo{background:rgba(251,191,36,.12);color:var(--accent);border-color:rgba(251,191,36,.3)}
+.tag.s-fazer{background:rgba(96,165,250,.12);color:var(--blue);border-color:rgba(96,165,250,.25)}
+.tag.s-verificar{background:rgba(167,139,250,.12);color:var(--violet);border-color:rgba(167,139,250,.25)}
+.tag.s-bloqueado{background:rgba(251,113,133,.15);color:var(--rose);border-color:rgba(251,113,133,.3)}
+.tag.cat-estoque{background:rgba(96,165,250,.1);color:var(--blue);border-color:rgba(96,165,250,.2)}
+.tag.cat-garantia{background:rgba(251,113,133,.1);color:var(--rose);border-color:rgba(251,113,133,.2)}
+.tag.cat-servico{background:rgba(52,211,153,.1);color:var(--emerald);border-color:rgba(52,211,153,.2)}
+.tag.cat-analise{background:rgba(167,139,250,.1);color:var(--violet);border-color:rgba(167,139,250,.2)}
+.tag.loc{background:var(--bg-elev-3);color:var(--text-2)}
+.muted{color:var(--text-3)}
+.empty{padding:80px 20px;text-align:center;color:var(--text-3)}
+.empty h3{color:var(--text-2);margin-bottom:8px}
+.days-pos{color:var(--emerald);font-weight:500}
+.days-warn{color:var(--orange);font-weight:500}
+.days-late{color:var(--rose);font-weight:600}
+.actions-cell{display:flex;gap:4px;flex-wrap:nowrap;white-space:nowrap}
+
+.quick-btn{display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:5px 9px;border-radius:6px;font-size:11px;font-weight:500;background:var(--bg-elev-3);border:1px solid var(--border-strong);color:var(--text-2);cursor:pointer;transition:all .15s;white-space:nowrap}
+.quick-btn:hover{background:var(--bg-elev-2);color:var(--text-1);border-color:var(--text-3)}
+.quick-btn.start{color:var(--blue);border-color:rgba(96,165,250,.3)}
+.quick-btn.start:hover{background:rgba(96,165,250,.1)}
+.quick-btn.ready{color:var(--emerald);border-color:rgba(52,211,153,.3)}
+.quick-btn.ready:hover{background:rgba(52,211,153,.1)}
+.quick-btn.del{color:var(--rose);border-color:rgba(251,113,133,.25)}
+.quick-btn.del:hover{background:rgba(251,113,133,.08)}
+
+.modal-backdrop{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:20px}
+.modal-backdrop.open{display:flex}
+.modal{background:var(--bg-elev-1);border:1px solid var(--border-strong);border-radius:16px;width:100%;max-width:680px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 24px 60px -12px rgba(0,0,0,.6)}
+.modal-head{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-head h3{font-size:17px;font-weight:600;font-family:'Bricolage Grotesque'}
+.modal-close{background:none;border:none;color:var(--text-3);cursor:pointer;font-size:22px;line-height:1;padding:4px 8px;border-radius:6px}
+.modal-close:hover{color:var(--text-1);background:var(--bg-elev-2)}
+.modal-body{padding:22px;overflow:auto}
+.modal-foot{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end}
+.form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.form-grid .full{grid-column:span 2}
+@media(max-width:600px){.form-grid{grid-template-columns:1fr}.form-grid .full{grid-column:span 1}}
+.confirm{max-width:420px}
+.confirm-body{padding:24px;text-align:center}
+.confirm-body .ico{width:54px;height:54px;border-radius:50%;margin:0 auto 14px;background:rgba(251,113,133,.15);color:var(--rose);display:grid;place-items:center;font-size:24px}
+.confirm-body h4{font-size:16px;font-weight:600;margin-bottom:8px;font-family:'Bricolage Grotesque'}
+.confirm-body p{font-size:13px;color:var(--text-2);line-height:1.5}
+
+.toast{position:fixed;bottom:24px;right:24px;z-index:600;background:var(--bg-elev-1);border:1px solid var(--border-strong);padding:12px 18px;border-radius:10px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:10px;box-shadow:0 12px 32px -8px rgba(0,0,0,.5);opacity:0;transform:translateY(10px);pointer-events:none;transition:all .25s}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.ok{border-color:rgba(52,211,153,.4);color:var(--emerald)}
+.toast.err{border-color:rgba(251,113,133,.4);color:var(--rose)}
+
+.spinner{width:14px;height:14px;border:2px solid var(--border-strong);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading{display:inline-flex;align-items:center;gap:8px;color:var(--text-3);font-size:12px}
+
+footer{padding:24px 28px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;color:var(--text-3);font-size:12px}
+</style>
+</head>
+<body>
+
+<div id="loginScreen" class="login-screen">
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="brand-mark">F</div>
+      <div>
+        <div class="name">Fast Repair</div>
+        <div class="sub">Mids · Sistema</div>
+      </div>
+    </div>
+    <div class="login-title">Bem-vindo de volta</div>
+    <div class="login-subtitle">Entre com suas credenciais para acessar</div>
+    <form id="loginForm" autocomplete="off">
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="loginEmail" placeholder="seu@email.com" required>
+      </div>
+      <div class="field">
+        <label>Senha</label>
+        <input type="password" id="loginPassword" placeholder="••••••••" required>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" id="loginBtn">Entrar</button>
+      <div id="loginError" class="login-error"></div>
+    </form>
+  </div>
+</div>
+
+<div id="app" class="app" style="display:none">
+
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-mark">F</div>
+      <div>
+        <div class="name">Fast Repair</div>
+        <div class="sub">Mids</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <div class="nav-item active" data-page="dashboard"><span class="icon">▣</span> Dashboard</div>
+      <div class="nav-item" data-page="aparelhos"><span class="icon">▤</span> Aparelhos</div>
+      <div class="nav-section">Ações</div>
+      <div class="nav-item" id="navNew"><span class="icon">+</span> Novo aparelho</div>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="avatar" id="userAvatar">?</div>
+      <div class="user-info">
+        <div class="user-name" id="userName">—</div>
+        <button class="user-action" id="logoutBtn">Sair</button>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-title">
+        <h2 id="pageTitle">Dashboard</h2>
+        <p id="pageSub">Visão geral da operação</p>
+      </div>
+      <div class="topbar-actions">
+        <span id="status" class="status-dot">Aguardando…</span>
+        <select id="periodSelect" class="toolbar-select">
+          <option value="all">Todo o período</option>
+        </select>
+        <button id="refreshBtn" class="btn">↻ Atualizar</button>
+      </div>
+    </header>
+
+    <div id="page-dashboard" class="page active">
+      <div class="kpi-grid">
+        <div class="kpi"><div class="label">No fluxo</div><div class="value mono" id="kpiTotal">—</div><div class="meta" id="kpiTotalMeta">total</div></div>
+        <div class="kpi pending"><div class="label">Pendentes</div><div class="value mono" id="kpiPending">—</div><div class="meta" id="kpiPendingMeta">a fazer + em processo</div></div>
+        <div class="kpi ready"><div class="label">Prontos</div><div class="value mono" id="kpiReady">—</div><div class="meta" id="kpiReadyMeta">no período</div></div>
+        <div class="kpi accent"><div class="label">Tempo médio</div><div class="value mono small" id="kpiAvgTime">—</div><div class="meta" id="kpiAvgTimeMeta">de reparo</div></div>
+        <div class="kpi"><div class="label">No prazo</div><div class="value mono small" id="kpiOnTime">—</div><div class="meta" id="kpiOnTimeMeta">com prazo definido</div></div>
+      </div>
+
+      <div class="section-title"><h2>Alertas operacionais</h2><span class="rule"></span></div>
+      <div class="insight-grid">
+        <div class="insight alert" id="insightAging" style="display:none"><div class="insight-icon">⏱</div><div class="insight-body"><div class="insight-title">Parados há +3 dias</div><div class="insight-desc">A fazer ou em processo</div><span class="insight-count" id="agingCount">0</span></div></div>
+        <div class="insight warn" id="insightBlocked" style="display:none"><div class="insight-icon">⊘</div><div class="insight-body"><div class="insight-title">Bloqueados</div><div class="insight-desc">Precisam de ação</div><span class="insight-count" id="blockedCount">0</span></div></div>
+        <div class="insight info" id="insightVerify" style="display:none"><div class="insight-icon">?</div><div class="insight-body"><div class="insight-title">A verificar</div><div class="insight-desc">Avaliação pendente</div><span class="insight-count" id="verifyCount">0</span></div></div>
+        <div class="insight warn" id="insightDuplicate" style="display:none"><div class="insight-icon">↻</div><div class="insight-body"><div class="insight-title">IMEIs com retorno</div><div class="insight-desc">Mais de uma vez</div><span class="insight-count" id="dupCount">0</span></div></div>
+      </div>
+
+      <div class="section-title"><h2>Análise visual</h2><span class="rule"></span></div>
+      <div class="charts-grid">
+        <div class="chart-card col-4"><h3>Situação atual</h3><div class="desc">Por status</div><div class="chart-wrap"><canvas id="chartStatus"></canvas></div></div>
+        <div class="chart-card col-4"><h3>Categoria</h3><div class="desc">Origem do aparelho</div><div class="chart-wrap"><canvas id="chartCategory"></canvas></div></div>
+        <div class="chart-card col-4"><h3>Onde está</h3><div class="desc">Localização</div><div class="chart-wrap"><canvas id="chartLocation"></canvas></div></div>
+        <div class="chart-card col-8"><h3>Aparelhos por dia</h3><div class="desc">Entradas e saídas</div><div class="chart-wrap tall"><canvas id="chartDaily"></canvas></div></div>
+        <div class="chart-card col-4"><h3>Tempo médio por categoria</h3><div class="desc">Dias de reparo</div><div class="chart-wrap tall"><canvas id="chartTimeByCat"></canvas></div></div>
+        <div class="chart-card col-6"><h3>Modelos mais frequentes</h3><div class="desc">Top 10</div><div class="chart-wrap tall"><canvas id="chartModels"></canvas></div></div>
+        <div class="chart-card col-6"><h3>Tipos de reparo</h3><div class="desc">Categorizado por "o que fazer"</div><div class="chart-wrap tall"><canvas id="chartRepairs"></canvas></div></div>
+      </div>
+    </div>
+
+    <div id="page-aparelhos" class="page">
+      <div style="display:flex; gap:10px; margin-bottom:16px; align-items:center; flex-wrap:wrap">
+        <button class="btn btn-primary" id="btnNewAparelho">+ Novo aparelho</button>
+        <span style="flex:1"></span>
+        <span class="loading" id="aparelhosCount"></span>
+      </div>
+      <div class="table-card">
+        <div class="table-toolbar">
+          <input id="searchInput" class="search-input" placeholder="Buscar por modelo, IMEI, reparo, observação…">
+          <select id="filterStatus" class="toolbar-select"><option value="">Todos status</option></select>
+          <select id="filterCategory" class="toolbar-select"><option value="">Todas categorias</option></select>
+          <select id="filterLocation" class="toolbar-select"><option value="">Todas localizações</option></select>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr id="tableHead">
+                <th data-sort="dataChegou">Chegou <span class="sort-ind">↕</span></th>
+                <th data-sort="dias" style="text-align:right">Dias <span class="sort-ind">↕</span></th>
+                <th data-sort="modelo">Modelo <span class="sort-ind">↕</span></th>
+                <th data-sort="cor">Cor <span class="sort-ind">↕</span></th>
+                <th data-sort="imei">IMEI <span class="sort-ind">↕</span></th>
+                <th data-sort="categoria">Categoria <span class="sort-ind">↕</span></th>
+                <th data-sort="situacao">Status <span class="sort-ind">↕</span></th>
+                <th data-sort="ondeEsta">Onde <span class="sort-ind">↕</span></th>
+                <th data-sort="oqueFazer">O que fazer <span class="sort-ind">↕</span></th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <tr><td colspan="10" class="empty"><div class="loading"><span class="spinner"></span> Carregando…</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <div>Fast Repair · Mids</div>
+      <div class="mono" id="lastUpdate">—</div>
+    </footer>
+  </div>
+</div>
+
+<div id="modalForm" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modalFormTitle">Novo aparelho</h3>
+      <button class="modal-close" data-close>×</button>
+    </div>
+    <div class="modal-body">
+      <form id="aparelhoForm" autocomplete="off">
+        <input type="hidden" id="formId" value="">
+        <div class="form-grid">
+          <div class="field"><label>Modelo *</label><input type="text" id="fModelo" placeholder="iPhone 13 Pro Max" required></div>
+          <div class="field"><label>Cor</label><input type="text" id="fCor" placeholder="Azul / Branco / Preto…"></div>
+          <div class="field"><label>IMEI</label><input type="text" id="fImei" placeholder="15 dígitos ou texto"></div>
+          <div class="field"><label>Categoria</label><select id="fCategoria"><option value="ESTOQUE LOJA">ESTOQUE LOJA</option><option value="GARANTIA">GARANTIA</option><option value="SERVIÇO">SERVIÇO</option><option value="ANALISE CLIENTE">ANALISE CLIENTE</option></select></div>
+          <div class="field"><label>Status</label><select id="fSituacao"><option value="A FAZER">A FAZER</option><option value="EM PROCESSO">EM PROCESSO</option><option value="VERIFICAR">VERIFICAR</option><option value="PRONTO">PRONTO</option><option value="BLOQUEADO">BLOQUEADO</option></select></div>
+          <div class="field"><label>Onde está</label><select id="fOndeEsta"><option value="FAST">FAST</option><option value="SP">SP</option><option value="SP MK">SP MK</option><option value="SP PJ">SP PJ</option></select></div>
+          <div class="field full"><label>O que fazer</label><input type="text" id="fOqueFazer" placeholder="Trocar tela e bateria…"></div>
+          <div class="field full"><label>O que fez</label><input type="text" id="fOqueFez" placeholder="(preencher quando concluir)"></div>
+          <div class="field full"><label>Observação</label><input type="text" id="fObs" placeholder="Detalhes adicionais"></div>
+          <div class="field"><label>Data chegada</label><input type="date" id="fDataChegou"></div>
+          <div class="field"><label>Data saída</label><input type="date" id="fDataSaida"></div>
+          <div class="field full"><label>Prazo</label><input type="date" id="fPrazo"></div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" data-close>Cancelar</button>
+      <button class="btn btn-primary" id="btnSaveAparelho">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div id="modalConfirm" class="modal-backdrop">
+  <div class="modal confirm">
+    <div class="confirm-body">
+      <div class="ico" id="confirmIcon">!</div>
+      <h4 id="confirmTitle">Confirmar ação</h4>
+      <p id="confirmMessage">Tem certeza?</p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" data-close>Cancelar</button>
+      <button class="btn btn-danger" id="btnConfirmYes">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast">—</div>
+
+<script>
+/* ============================================================
+   ✅ CREDENCIAIS DO SUPABASE — JÁ CONFIGURADAS
+   ============================================================ */
+const SUPABASE_URL = 'https://mcymrwozfuvwnufpovey.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_OpSaT7yXWPPs25yNWxgktg_D77iFkmr';
+
+const CONFIG = { AGING_DAYS: 3 };
+
+let sb = null;
+if (SUPABASE_URL && SUPABASE_KEY) {
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+}
+
+const STATE = {
+  user: null, rows: [], filtered: [], period: 'all', search: '',
+  filters: { status:'', categoria:'', ondeEsta:'' },
+  sort: { key:'dataChegou', dir:'desc' },
+  charts: {}, currentPage: 'dashboard', realtimeChannel: null,
+};
+
+const fmtInt = n => new Intl.NumberFormat('pt-BR').format(n||0);
+const fmtPct = n => (n||n===0) ? `${n.toFixed(1).replace('.',',')}%` : '—';
+const fmtDays = n => (n==null) ? '—' : `${n.toFixed(1).replace('.',',')} d`;
+const norm = s => String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+const escapeHtml = s => String(s||'').replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const todayISO = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
+const isoToBR = iso => { if (!iso) return ''; const [y,m,d] = String(iso).split('T')[0].split('-'); return `${d}/${m}/${y.slice(-2)}`; };
+const isoToDate = iso => { if (!iso) return null; const [y,m,d] = String(iso).split('T')[0].split('-'); return new Date(+y, +m-1, +d); };
+const ymKey = d => d ? `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}` : null;
+const ymLabel = key => { if (!key) return ''; const [y,m] = key.split('-'); const months = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']; return `${months[+m-1]} ${y}`; };
+const daysBetween = (a,b) => a && b ? Math.round((b-a)/(1000*60*60*24)*10)/10 : null;
+const todayMidnight = () => { const d = new Date(); d.setHours(0,0,0,0); return d; };
+const isRealImei = s => /^\d{6,}$/.test(String(s||'').replace(/\s/g,''));
+const setStatus = (kind,msg) => { const el = document.getElementById('status'); el.className = 'status-dot ' + (kind==='ok'?'ok':kind==='err'?'err':kind==='loading'?'loading':''); el.textContent = msg; };
+
+const REPAIR_BUCKETS = [
+  ['Tela', /tela|recolar|congel|verde|preta|mancha|riscad/i],
+  ['Bateria', /bateria|subir|subida|transplante.*bater|carga/i],
+  ['Traseira', /traseira|tampa/i],
+  ['Câmera/Lente', /c[aâ]mera|lente|vidro/i],
+  ['Sistema', /sistema|restaur|reset|passar|jumper/i],
+  ['Face ID', /face\s*id/i],
+  ['Auto falante', /auto\s*falante|auricular/i],
+  ['Conector', /conector|carregador|entrada/i],
+  ['Botão', /bot[aã]o|power|silenc|mute/i],
+  ['Sinal/Chip', /chip|sinal|operadora/i],
+  ['Não liga', /n[aã]o\s*liga|reinici/i],
+  ['Análise', /an[aá]lise|verificar|testar/i],
+  ['Bloqueado', /bloquead/i],
+];
+const bucketRepair = txt => {
+  const s = String(txt||'').trim();
+  if (!s) return [];
+  const parts = s.split(/[,;]| e /).map(x=>x.trim()).filter(Boolean);
+  const out = new Set();
+  for (const p of parts) { let m = null; for (const [n,rx] of REPAIR_BUCKETS) if (rx.test(p)) { m=n; break; } out.add(m || 'Outros'); }
+  return [...out];
+};
+const statusClass = s => { const n = norm(s); if (n.includes('pronto')) return 's-pronto'; if (n.includes('processo')) return 's-processo'; if (n.includes('fazer')) return 's-fazer'; if (n.includes('verificar')) return 's-verificar'; if (n.includes('bloquead')) return 's-bloqueado'; return ''; };
+const categoryClass = s => { const n = norm(s); if (n.includes('estoque')) return 'cat-estoque'; if (n.includes('garantia')) return 'cat-garantia'; if (n.includes('servico')) return 'cat-servico'; if (n.includes('analise')) return 'cat-analise'; return ''; };
+
+let toastTimer;
+function toast(msg, kind='') { const t = document.getElementById('toast'); t.textContent = msg; t.className = 'toast show ' + kind; clearTimeout(toastTimer); toastTimer = setTimeout(() => t.className = 'toast ' + kind, 3000); }
+
+const dbToRow = r => ({
+  id: r.id, modelo: r.modelo || '', cor: r.cor || '', imei: r.imei || '',
+  categoria: r.categoria || '', situacao: r.situacao || '', ondeEsta: r.onde_esta || '',
+  oqueFazer: r.oque_fazer || '', obs: r.observacao || '', oqueFez: r.oque_fez || '',
+  dataChegou: r.data_chegou || null, dataSaida: r.data_saida || null, prazo: r.prazo || null,
+  _dataChegou: isoToDate(r.data_chegou), _dataSaida: isoToDate(r.data_saida), _prazo: isoToDate(r.prazo),
+  dias: r.data_chegou && r.data_saida ? daysBetween(isoToDate(r.data_chegou), isoToDate(r.data_saida)) : null,
+  diasEmAberto: r.data_chegou && !r.data_saida ? daysBetween(isoToDate(r.data_chegou), todayMidnight()) : null,
+  noPrazo: r.data_saida && r.prazo ? (isoToDate(r.data_saida) <= isoToDate(r.prazo)) : null,
+});
+
+const rowToDb = (data, userId) => {
+  const out = {};
+  if (data.modelo !== undefined) out.modelo = String(data.modelo||'').trim().toUpperCase();
+  if (data.cor !== undefined) out.cor = String(data.cor||'').trim().toUpperCase();
+  if (data.imei !== undefined) out.imei = String(data.imei||'').trim();
+  if (data.categoria !== undefined) out.categoria = data.categoria;
+  if (data.situacao !== undefined) out.situacao = data.situacao;
+  if (data.ondeEsta !== undefined) out.onde_esta = data.ondeEsta;
+  if (data.oqueFazer !== undefined) out.oque_fazer = String(data.oqueFazer||'').trim();
+  if (data.obs !== undefined) out.observacao = String(data.obs||'').trim();
+  if (data.oqueFez !== undefined) out.oque_fez = String(data.oqueFez||'').trim();
+  if (data.dataChegou !== undefined) out.data_chegou = data.dataChegou || null;
+  if (data.dataSaida !== undefined) out.data_saida = data.dataSaida || null;
+  if (data.prazo !== undefined) out.prazo = data.prazo || null;
+  if (userId) out.updated_by = userId;
+  return out;
+};
+
+async function doLogin(email, password) {
+  const btn = document.getElementById('loginBtn');
+  const errEl = document.getElementById('loginError');
+  errEl.textContent = '';
+  if (!sb) { errEl.textContent = 'Supabase não configurado'; return; }
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Entrando…';
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+  btn.disabled = false; btn.textContent = 'Entrar';
+  if (error) { errEl.textContent = error.message === 'Invalid login credentials' ? 'Email ou senha incorretos' : error.message; return; }
+  STATE.user = data.user;
+  showApp();
+}
+
+async function doLogout() {
+  if (STATE.realtimeChannel) { sb.removeChannel(STATE.realtimeChannel); STATE.realtimeChannel = null; }
+  await sb.auth.signOut();
+  STATE.user = null; STATE.rows = [];
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'grid';
+  document.getElementById('loginPassword').value = '';
+}
+
+function showApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  if (STATE.user) {
+    const name = STATE.user.email.split('@')[0];
+    document.getElementById('userName').textContent = name;
+    document.getElementById('userAvatar').textContent = name.charAt(0).toUpperCase();
+  }
+  loadData(); subscribeRealtime();
+}
+
+async function loadData() {
+  setStatus('loading', 'Carregando…');
+  const { data, error } = await sb.from('aparelhos').select('*').order('data_chegou', { ascending: false, nullsFirst: false });
+  if (error) { setStatus('err', error.message); toast('Erro: ' + error.message, 'err'); return; }
+  STATE.rows = (data || []).map(dbToRow);
+  setStatus('ok', 'Conectado');
+  document.getElementById('lastUpdate').textContent = `Atualizado em ${new Date().toLocaleString('pt-BR')}`;
+  populateFilters(); applyAndRender();
+}
+
+async function createAparelho(formData) {
+  const dbData = rowToDb(formData, STATE.user?.id);
+  if (!dbData.modelo) return { error: 'Modelo é obrigatório' };
+  if (STATE.user?.id) dbData.created_by = STATE.user.id;
+  if (!dbData.data_chegou) dbData.data_chegou = todayISO();
+  if (!dbData.situacao) dbData.situacao = 'A FAZER';
+  if (!dbData.onde_esta) dbData.onde_esta = 'FAST';
+  const { data, error } = await sb.from('aparelhos').insert(dbData).select().single();
+  if (error) return { error: error.message };
+  await logAction(data.id, 'CREATE', { modelo: data.modelo });
+  return { data };
+}
+
+async function updateAparelho(id, formData) {
+  const dbData = rowToDb(formData, STATE.user?.id);
+  const { error } = await sb.from('aparelhos').update(dbData).eq('id', id);
+  if (error) return { error: error.message };
+  await logAction(id, 'UPDATE', dbData);
+  return { ok: true };
+}
+
+async function deleteAparelhoById(id) {
+  const r = STATE.rows.find(x => x.id === id);
+  await logAction(id, 'DELETE', { modelo: r?.modelo });
+  const { error } = await sb.from('aparelhos').delete().eq('id', id);
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
+async function changeStatus(id, status) {
+  const update = { situacao: status };
+  if (status === 'PRONTO') { const r = STATE.rows.find(x => x.id === id); if (r && !r.dataSaida) update.data_saida = todayISO(); }
+  if (STATE.user?.id) update.updated_by = STATE.user.id;
+  const { error } = await sb.from('aparelhos').update(update).eq('id', id);
+  if (error) return { error: error.message };
+  await logAction(id, 'STATUS:' + status);
+  return { ok: true };
+}
+
+async function logAction(aparelhoId, acao, detalhes) {
+  if (!STATE.user?.id) return;
+  await sb.from('aparelhos_log').insert({ aparelho_id: aparelhoId, usuario_id: STATE.user.id, acao, detalhes: detalhes || null });
+}
+
+function subscribeRealtime() {
+  if (STATE.realtimeChannel) return;
+  STATE.realtimeChannel = sb.channel('aparelhos-rt').on('postgres_changes', { event: '*', schema: 'public', table: 'aparelhos' }, () => loadData()).subscribe();
+}
+
+function populateFilters() {
+  const months = new Map();
+  for (const r of STATE.rows) { const k = ymKey(r._dataChegou); if (k) months.set(k, (months.get(k)||0)+1); }
+  const periodSel = document.getElementById('periodSelect');
+  periodSel.innerHTML = '<option value="all">Todo o período</option>';
+  [...months.keys()].sort().reverse().forEach(k => { const o = document.createElement('option'); o.value = k; o.textContent = `${ymLabel(k)} · ${months.get(k)}`; periodSel.appendChild(o); });
+  fillSelect('filterStatus', [...new Set(STATE.rows.map(r=>r.situacao).filter(Boolean))].sort(), 'Todos status');
+  fillSelect('filterCategory', [...new Set(STATE.rows.map(r=>r.categoria).filter(Boolean))].sort(), 'Todas categorias');
+  fillSelect('filterLocation', [...new Set(STATE.rows.map(r=>r.ondeEsta).filter(Boolean))].sort(), 'Todas localizações');
+}
+function fillSelect(id, values, allLabel) {
+  const sel = document.getElementById(id);
+  const cur = sel.value;
+  sel.innerHTML = `<option value="">${allLabel}</option>` + values.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
+  if (values.includes(cur)) sel.value = cur;
+}
+
+function applyFilters() {
+  const q = norm(STATE.search);
+  STATE.filtered = STATE.rows.filter(r => {
+    if (STATE.period !== 'all' && ymKey(r._dataChegou) !== STATE.period) return false;
+    if (STATE.filters.status && r.situacao !== STATE.filters.status) return false;
+    if (STATE.filters.categoria && r.categoria !== STATE.filters.categoria) return false;
+    if (STATE.filters.ondeEsta && r.ondeEsta !== STATE.filters.ondeEsta) return false;
+    if (q) { const blob = norm([r.modelo,r.cor,r.imei,r.categoria,r.situacao,r.ondeEsta,r.oqueFazer,r.obs,r.oqueFez].join(' ')); if (!blob.includes(q)) return false; }
+    return true;
+  });
+  const {key, dir} = STATE.sort;
+  STATE.filtered.sort((a,b)=>{
+    let av, bv;
+    if (key==='dataChegou') { av=a._dataChegou?a._dataChegou.getTime():null; bv=b._dataChegou?b._dataChegou.getTime():null; }
+    else { av=a[key]; bv=b[key]; }
+    if (typeof av==='string') av=av.toLowerCase();
+    if (typeof bv==='string') bv=bv.toLowerCase();
+    if (av==null) av=dir==='asc'?Infinity:-Infinity;
+    if (bv==null) bv=dir==='asc'?Infinity:-Infinity;
+    if (av<bv) return dir==='asc'?-1:1;
+    if (av>bv) return dir==='asc'?1:-1;
+    return 0;
+  });
+}
+
+function applyAndRender() {
+  applyFilters();
+  if (STATE.currentPage==='dashboard') { renderKPIs(); renderInsights(); renderCharts(); }
+  else if (STATE.currentPage==='aparelhos') { renderTable(); }
+}
+
+const isPending = r => { const n = norm(r.situacao); return n.includes('fazer')||n.includes('processo')||n.includes('verificar')||(!n && r._dataChegou && !r._dataSaida); };
+const isReady = r => norm(r.situacao).includes('pronto');
+const isBlocked = r => norm(r.situacao).includes('bloquead');
+
+function renderKPIs() {
+  const rows = STATE.filtered;
+  const total = rows.length;
+  const pending = rows.filter(isPending).length;
+  const ready = rows.filter(isReady).length;
+  const completed = rows.filter(r=>r.dias!=null && r.dias>=0);
+  const avgTime = completed.length ? completed.reduce((s,r)=>s+r.dias,0)/completed.length : null;
+  const withDeadline = rows.filter(r=>r.noPrazo!==null);
+  const onTime = withDeadline.filter(r=>r.noPrazo).length;
+  const onTimePct = withDeadline.length ? (onTime/withDeadline.length)*100 : null;
+  document.getElementById('kpiTotal').textContent = fmtInt(total);
+  document.getElementById('kpiTotalMeta').textContent = STATE.period==='all'?'todo o período':ymLabel(STATE.period);
+  document.getElementById('kpiPending').textContent = fmtInt(pending);
+  document.getElementById('kpiPendingMeta').textContent = `${total?Math.round(pending/total*100):0}% do total`;
+  document.getElementById('kpiReady').textContent = fmtInt(ready);
+  document.getElementById('kpiReadyMeta').textContent = `${total?Math.round(ready/total*100):0}% do total`;
+  document.getElementById('kpiAvgTime').textContent = avgTime==null?'—':fmtDays(avgTime);
+  document.getElementById('kpiAvgTimeMeta').textContent = completed.length?`base: ${completed.length} concluídos`:'sem dados';
+  document.getElementById('kpiOnTime').textContent = onTimePct==null?'—':fmtPct(onTimePct);
+  document.getElementById('kpiOnTimeMeta').textContent = withDeadline.length?`${onTime}/${withDeadline.length} no prazo`:'sem prazos';
+}
+
+function renderInsights() {
+  const rows = STATE.filtered;
+  const aging = rows.filter(r=>isPending(r)&&r.diasEmAberto!=null&&r.diasEmAberto>=CONFIG.AGING_DAYS).length;
+  const blocked = rows.filter(isBlocked).length;
+  const verifying = rows.filter(r=>norm(r.situacao).includes('verificar')).length;
+  const imeiCount = new Map();
+  for (const r of rows) { const k = (r.imei||'').replace(/\s+/g,'').trim(); if (!isRealImei(k)) continue; imeiCount.set(k, (imeiCount.get(k)||0)+1); }
+  const dup = [...imeiCount.values()].filter(v=>v>1).length;
+  toggleInsight('insightAging','agingCount',aging);
+  toggleInsight('insightBlocked','blockedCount',blocked);
+  toggleInsight('insightVerify','verifyCount',verifying);
+  toggleInsight('insightDuplicate','dupCount',dup);
+}
+function toggleInsight(card, count, n) { document.getElementById(card).style.display = n>0?'flex':'none'; document.getElementById(count).textContent = fmtInt(n); }
+
+const CHART_COLORS = ['#fbbf24','#fb923c','#34d399','#60a5fa','#a78bfa','#f472b6','#fb7185','#22d3ee','#facc15','#84cc16'];
+const STATUS_COLORS = {'PRONTO':'#34d399','EM PROCESSO':'#fbbf24','A FAZER':'#60a5fa','VERIFICAR':'#a78bfa','BLOQUEADO':'#fb7185'};
+const CATEGORY_COLORS = {'ESTOQUE LOJA':'#60a5fa','GARANTIA':'#fb7185','SERVIÇO':'#34d399','ANALISE CLIENTE':'#a78bfa'};
+const baseChartOpts = () => ({
+  responsive:true,maintainAspectRatio:false,
+  plugins:{legend:{display:false},tooltip:{backgroundColor:'#0a0a0b',titleColor:'#f5f5f7',bodyColor:'#a8a8b0',borderColor:'#33333a',borderWidth:1,padding:10,titleFont:{family:'Geist',size:12,weight:'600'},bodyFont:{family:'Geist Mono',size:12},cornerRadius:8,displayColors:true,boxPadding:6}},
+  scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#6f6f78',font:{family:'Geist Mono',size:10}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#6f6f78',font:{family:'Geist Mono',size:10}},beginAtZero:true}},
+});
+const colorFor = (map,key,idx) => map[String(key||'').toUpperCase().trim()] || CHART_COLORS[idx%CHART_COLORS.length];
+const legendCfg = () => ({display:true,position:'bottom',labels:{color:'#a8a8b0',font:{family:'Geist',size:10},padding:8,boxWidth:8,boxHeight:8,usePointStyle:true,pointStyle:'circle'}});
+
+function countBy(arr, fn) { const m = new Map(); for (const r of arr) { const k = fn(r); if (k) m.set(k,(m.get(k)||0)+1); } return new Map([...m.entries()].sort((a,b)=>b[1]-a[1])); }
+function dateKey(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function drawChart(id,type,data,options) { const ctx = document.getElementById(id); if (!ctx) return; if (STATE.charts[id]) STATE.charts[id].destroy(); STATE.charts[id] = new Chart(ctx,{type,data,options}); }
+
+function renderCharts() {
+  const rows = STATE.filtered;
+  const statusCount = countBy(rows, r => r.situacao || '(sem status)');
+  drawChart('chartStatus','doughnut',{labels:[...statusCount.keys()],datasets:[{data:[...statusCount.values()],backgroundColor:[...statusCount.keys()].map((k,i)=>colorFor(STATUS_COLORS,k,i)),borderColor:'#111114',borderWidth:2}]},{cutout:'62%',plugins:{...baseChartOpts().plugins,legend:legendCfg()},scales:{}});
+  const catCount = countBy(rows, r => r.categoria || '(sem cat.)');
+  drawChart('chartCategory','doughnut',{labels:[...catCount.keys()],datasets:[{data:[...catCount.values()],backgroundColor:[...catCount.keys()].map((k,i)=>colorFor(CATEGORY_COLORS,k,i)),borderColor:'#111114',borderWidth:2}]},{cutout:'62%',plugins:{...baseChartOpts().plugins,legend:legendCfg()},scales:{}});
+  const locCount = countBy(rows, r => r.ondeEsta || '(sem local)');
+  const locArr = [...locCount.entries()];
+  drawChart('chartLocation','bar',{labels:locArr.map(([k])=>k),datasets:[{data:locArr.map(([,v])=>v),backgroundColor:'#fbbf24',borderRadius:4,barPercentage:.6}]},{...baseChartOpts(),scales:{x:{grid:{display:false},ticks:{color:'#a8a8b0',font:{family:'Geist',size:11}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#6f6f78',font:{family:'Geist Mono',size:10},precision:0},beginAtZero:true}}});
+  const dayIn = new Map(), dayOut = new Map();
+  for (const r of rows) { if (r._dataChegou) { const k = dateKey(r._dataChegou); dayIn.set(k,(dayIn.get(k)||0)+1); } if (r._dataSaida) { const k = dateKey(r._dataSaida); dayOut.set(k,(dayOut.get(k)||0)+1); } }
+  const allDays = [...new Set([...dayIn.keys(),...dayOut.keys()])].sort();
+  drawChart('chartDaily','line',{labels:allDays.map(d=>{const [,m,dd]=d.split('-');return `${dd}/${m}`}),datasets:[{label:'Entradas',data:allDays.map(d=>dayIn.get(d)||0),borderColor:'#fbbf24',backgroundColor:'rgba(251,191,36,.12)',fill:true,tension:.35,pointRadius:2,borderWidth:2},{label:'Saídas',data:allDays.map(d=>dayOut.get(d)||0),borderColor:'#34d399',backgroundColor:'rgba(52,211,153,.08)',fill:true,tension:.35,pointRadius:2,borderWidth:2}]},{...baseChartOpts(),plugins:{...baseChartOpts().plugins,legend:{display:true,position:'top',align:'end',labels:{color:'#a8a8b0',font:{family:'Geist',size:11},boxWidth:10,boxHeight:10,usePointStyle:true,pointStyle:'circle',padding:14}}},scales:{x:{grid:{display:false},ticks:{color:'#6f6f78',font:{family:'Geist Mono',size:10},maxRotation:0,autoSkipPadding:18}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#6f6f78',font:{family:'Geist Mono',size:10},precision:0},beginAtZero:true}}});
+  const timeByCat = new Map();
+  for (const r of rows) { if (r.dias==null||r.dias<0||!r.categoria) continue; const cur = timeByCat.get(r.categoria) || {sum:0,count:0}; cur.sum+=r.dias; cur.count++; timeByCat.set(r.categoria,cur); }
+  const tArr = [...timeByCat.entries()].map(([k,v])=>[k,v.count?v.sum/v.count:0,v.count]).sort((a,b)=>b[1]-a[1]);
+  drawChart('chartTimeByCat','bar',{labels:tArr.map(([k])=>k),datasets:[{data:tArr.map(([,v])=>+v.toFixed(1)),backgroundColor:tArr.map(([k],i)=>colorFor(CATEGORY_COLORS,k,i)),borderRadius:4,barPercentage:.7}]},{...baseChartOpts(),indexAxis:'y',plugins:{...baseChartOpts().plugins,tooltip:{...baseChartOpts().plugins.tooltip,callbacks:{label:(ctx)=>` ${ctx.parsed.x.toFixed(1).replace('.',',')} dias · ${tArr[ctx.dataIndex][2]} reparos`}}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#6f6f78',font:{family:'Geist Mono',size:10},callback:v=>v+'d'},beginAtZero:true},y:{grid:{display:false},ticks:{color:'#a8a8b0',font:{family:'Geist',size:11}}}}});
+  const modelCount = new Map();
+  for (const r of rows) { if (!r.modelo) continue; const m = r.modelo.toUpperCase().replace(/^IPHONE\s*/i,'iPhone ').replace(/\s+/g,' ').trim(); modelCount.set(m,(modelCount.get(m)||0)+1); }
+  const topMod = [...modelCount.entries()].sort((a,b)=>b[1]-a[1]).slice(0,10);
+  drawChart('chartModels','bar',{labels:topMod.map(([k])=>k),datasets:[{data:topMod.map(([,v])=>v),backgroundColor:'#fbbf24',borderRadius:4,barPercentage:.7}]},{...baseChartOpts(),indexAxis:'y',scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#6f6f78',font:{family:'Geist Mono',size:10},precision:0},beginAtZero:true},y:{grid:{display:false},ticks:{color:'#a8a8b0',font:{family:'Geist',size:11}}}}});
+  const repCount = new Map();
+  for (const r of rows) for (const b of bucketRepair(r.oqueFazer)) repCount.set(b,(repCount.get(b)||0)+1);
+  const sortedRep = [...repCount.entries()].sort((a,b)=>b[1]-a[1]).slice(0,10);
+  drawChart('chartRepairs','bar',{labels:sortedRep.map(([k])=>k),datasets:[{data:sortedRep.map(([,v])=>v),backgroundColor:'#fb923c',borderRadius:4,barPercentage:.7}]},{...baseChartOpts(),indexAxis:'y',scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#6f6f78',font:{family:'Geist Mono',size:10},precision:0},beginAtZero:true},y:{grid:{display:false},ticks:{color:'#a8a8b0',font:{family:'Geist',size:11}}}}});
+}
+
+function renderTable() {
+  const rows = STATE.filtered;
+  document.getElementById('aparelhosCount').textContent = `${fmtInt(rows.length)} registros`;
+  document.querySelectorAll('#tableHead th[data-sort]').forEach(th => { th.classList.toggle('sorted', th.dataset.sort === STATE.sort.key); const ind = th.querySelector('.sort-ind'); if (ind) ind.textContent = th.dataset.sort === STATE.sort.key ? (STATE.sort.dir==='asc'?'↑':'↓') : '↕'; });
+  const body = document.getElementById('tableBody');
+  if (!rows.length) { body.innerHTML = '<tr><td colspan="10" class="empty"><h3>Nenhum aparelho</h3>Clique em "+ Novo aparelho" pra começar.</td></tr>'; return; }
+  body.innerHTML = rows.map(r => {
+    const sCls = statusClass(r.situacao);
+    const cCls = categoryClass(r.categoria);
+    const isLate = r.noPrazo === false;
+    const isAging = isPending(r) && r.diasEmAberto!=null && r.diasEmAberto>=CONFIG.AGING_DAYS;
+    const trCls = isLate ? 'late' : (isAging ? 'aging' : '');
+    let diasCell;
+    if (r.dias!=null) { const cls = r.dias<=2?'days-pos':r.dias<=5?'days-warn':'days-late'; diasCell = `<span class="${cls}">${r.dias.toFixed(1).replace('.',',')}</span>`; }
+    else if (r.diasEmAberto!=null) { const cls = r.diasEmAberto<3?'muted':r.diasEmAberto<7?'days-warn':'days-late'; diasCell = `<span class="${cls}" title="Em aberto">↻ ${r.diasEmAberto.toFixed(0)}</span>`; }
+    else diasCell = '<span class="muted">—</span>';
+    const sNorm = norm(r.situacao);
+    let qa = '';
+    if (sNorm.includes('fazer')) { qa += `<button class="quick-btn start" data-action="start" data-id="${r.id}" title="Iniciar reparo">▶</button>`; qa += `<button class="quick-btn ready" data-action="ready" data-id="${r.id}" title="Marcar pronto">✓</button>`; }
+    else if (sNorm.includes('processo')) { qa += `<button class="quick-btn ready" data-action="ready" data-id="${r.id}" title="Marcar pronto">✓</button>`; }
+    qa += `<button class="quick-btn" data-action="edit" data-id="${r.id}" title="Editar">✏</button>`;
+    qa += `<button class="quick-btn del" data-action="delete" data-id="${r.id}" title="Excluir">🗑</button>`;
+    return `<tr class="${trCls}">
+      <td class="mono">${escapeHtml(isoToBR(r.dataChegou)||'—')}</td>
+      <td class="mono" style="text-align:right">${diasCell}</td>
+      <td>${escapeHtml(r.modelo)}</td>
+      <td><span class="muted">${escapeHtml(r.cor||'')}</span></td>
+      <td class="mono ${isRealImei(r.imei)?'':'muted'}" style="font-size:11.5px">${escapeHtml(r.imei||'—')}</td>
+      <td>${r.categoria?`<span class="tag ${cCls}">${escapeHtml(r.categoria)}</span>`:'<span class="muted">—</span>'}</td>
+      <td>${r.situacao?`<span class="tag ${sCls}">${escapeHtml(r.situacao)}</span>`:'<span class="muted">—</span>'}</td>
+      <td>${r.ondeEsta?`<span class="tag loc">${escapeHtml(r.ondeEsta)}</span>`:'<span class="muted">—</span>'}</td>
+      <td style="max-width:260px"><span style="font-size:12.5px">${escapeHtml(r.oqueFazer||'')||'<span class="muted">—</span>'}</span></td>
+      <td><div class="actions-cell">${qa}</div></td>
+    </tr>`;
+  }).join('');
+}
+
+function openForm(id = null) {
+  const modal = document.getElementById('modalForm');
+  const title = document.getElementById('modalFormTitle');
+  if (id) {
+    const r = STATE.rows.find(x => x.id === id);
+    if (!r) { toast('Aparelho não encontrado', 'err'); return; }
+    title.textContent = `Editar · ${r.modelo}`;
+    document.getElementById('formId').value = id;
+    document.getElementById('fModelo').value = r.modelo || '';
+    document.getElementById('fCor').value = r.cor || '';
+    document.getElementById('fImei').value = r.imei || '';
+    document.getElementById('fCategoria').value = r.categoria || 'ESTOQUE LOJA';
+    document.getElementById('fSituacao').value = r.situacao || 'A FAZER';
+    document.getElementById('fOndeEsta').value = r.ondeEsta || 'FAST';
+    document.getElementById('fOqueFazer').value = r.oqueFazer || '';
+    document.getElementById('fOqueFez').value = r.oqueFez || '';
+    document.getElementById('fObs').value = r.obs || '';
+    document.getElementById('fDataChegou').value = r.dataChegou || '';
+    document.getElementById('fDataSaida').value = r.dataSaida || '';
+    document.getElementById('fPrazo').value = r.prazo || '';
+  } else {
+    title.textContent = 'Novo aparelho';
+    document.getElementById('formId').value = '';
+    document.getElementById('aparelhoForm').reset();
+    document.getElementById('fCategoria').value = 'ESTOQUE LOJA';
+    document.getElementById('fSituacao').value = 'A FAZER';
+    document.getElementById('fOndeEsta').value = 'FAST';
+    document.getElementById('fDataChegou').value = todayISO();
+  }
+  modal.classList.add('open');
+  setTimeout(() => document.getElementById('fModelo').focus(), 50);
+}
+
+async function saveForm() {
+  const id = document.getElementById('formId').value;
+  const formData = {
+    modelo: document.getElementById('fModelo').value.trim(),
+    cor: document.getElementById('fCor').value.trim(),
+    imei: document.getElementById('fImei').value.trim(),
+    categoria: document.getElementById('fCategoria').value,
+    situacao: document.getElementById('fSituacao').value,
+    ondeEsta: document.getElementById('fOndeEsta').value,
+    oqueFazer: document.getElementById('fOqueFazer').value.trim(),
+    oqueFez: document.getElementById('fOqueFez').value.trim(),
+    obs: document.getElementById('fObs').value.trim(),
+    dataChegou: document.getElementById('fDataChegou').value || null,
+    dataSaida: document.getElementById('fDataSaida').value || null,
+    prazo: document.getElementById('fPrazo').value || null,
+  };
+  if (!formData.modelo) { toast('Modelo é obrigatório', 'err'); return; }
+  const btn = document.getElementById('btnSaveAparelho');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Salvando…';
+  const res = id ? await updateAparelho(parseInt(id), formData) : await createAparelho(formData);
+  btn.disabled = false; btn.textContent = 'Salvar';
+  if (res.error) { toast('Erro: ' + res.error, 'err'); return; }
+  toast(id ? '✓ Aparelho atualizado' : '✓ Aparelho cadastrado', 'ok');
+  document.getElementById('modalForm').classList.remove('open');
+  await loadData();
+}
+
+async function quickAction(action, id) {
+  const r = STATE.rows.find(x => x.id === id);
+  if (!r) return;
+  if (action === 'start') { const res = await changeStatus(id, 'EM PROCESSO'); if (res.error) return toast(res.error, 'err'); toast(`✓ ${r.modelo}: em processo`, 'ok'); return loadData(); }
+  if (action === 'ready') { const res = await changeStatus(id, 'PRONTO'); if (res.error) return toast(res.error, 'err'); toast(`✓ ${r.modelo}: pronto`, 'ok'); return loadData(); }
+  if (action === 'edit') return openForm(id);
+  if (action === 'delete') {
+    confirmDialog({ title: 'Excluir aparelho?', message: `${r.modelo} ${r.cor||''} — IMEI ${r.imei||'(sem)'}. Essa ação não pode ser desfeita.`, okLabel: 'Excluir', onConfirm: async () => { const res = await deleteAparelhoById(id); if (res.error) return toast(res.error, 'err'); toast('✓ Aparelho excluído', 'ok'); await loadData(); } });
+  }
+}
+
+function confirmDialog({ title, message, okLabel='Confirmar', onConfirm }) {
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmMessage').textContent = message;
+  const btn = document.getElementById('btnConfirmYes');
+  btn.textContent = okLabel;
+  const newBtn = btn.cloneNode(true);
+  btn.parentNode.replaceChild(newBtn, btn);
+  newBtn.addEventListener('click', async () => { document.getElementById('modalConfirm').classList.remove('open'); await onConfirm(); });
+  document.getElementById('modalConfirm').classList.add('open');
+}
+
+function goTo(page) {
+  STATE.currentPage = page;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelector(`.nav-item[data-page="${page}"]`)?.classList.add('active');
+  const titles = { dashboard: ['Dashboard', 'Visão geral da operação'], aparelhos: ['Aparelhos', 'Cadastro e gestão'] };
+  const t = titles[page] || ['', ''];
+  document.getElementById('pageTitle').textContent = t[0];
+  document.getElementById('pageSub').textContent = t[1];
+  applyAndRender();
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  document.getElementById('loginForm').addEventListener('submit', e => { e.preventDefault(); doLogin(document.getElementById('loginEmail').value.trim(), document.getElementById('loginPassword').value); });
+  document.getElementById('logoutBtn').addEventListener('click', doLogout);
+  document.querySelectorAll('.nav-item[data-page]').forEach(el => { el.addEventListener('click', () => goTo(el.dataset.page)); });
+  document.getElementById('navNew').addEventListener('click', () => { goTo('aparelhos'); openForm(null); });
+  document.getElementById('btnNewAparelho').addEventListener('click', () => openForm(null));
+  document.getElementById('refreshBtn').addEventListener('click', loadData);
+  document.getElementById('periodSelect').addEventListener('change', e => { STATE.period = e.target.value; applyAndRender(); });
+  document.getElementById('searchInput').addEventListener('input', e => { STATE.search = e.target.value; applyAndRender(); });
+  document.getElementById('filterStatus').addEventListener('change', e => { STATE.filters.status = e.target.value; applyAndRender(); });
+  document.getElementById('filterCategory').addEventListener('change', e => { STATE.filters.categoria = e.target.value; applyAndRender(); });
+  document.getElementById('filterLocation').addEventListener('change', e => { STATE.filters.ondeEsta = e.target.value; applyAndRender(); });
+  document.getElementById('tableHead').addEventListener('click', e => { const th = e.target.closest('th[data-sort]'); if (!th) return; const key = th.dataset.sort; if (STATE.sort.key === key) STATE.sort.dir = STATE.sort.dir==='asc'?'desc':'asc'; else { STATE.sort.key = key; STATE.sort.dir = ['dias','dataChegou'].includes(key)?'desc':'asc'; } renderTable(); });
+  document.getElementById('tableBody').addEventListener('click', e => { const btn = e.target.closest('[data-action]'); if (!btn) return; quickAction(btn.dataset.action, parseInt(btn.dataset.id)); });
+  document.querySelectorAll('[data-close]').forEach(el => el.addEventListener('click', () => el.closest('.modal-backdrop').classList.remove('open')));
+  document.getElementById('btnSaveAparelho').addEventListener('click', saveForm);
+  document.getElementById('aparelhoForm').addEventListener('submit', e => { e.preventDefault(); saveForm(); });
+  document.querySelectorAll('.modal-backdrop').forEach(el => el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); }));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') document.querySelectorAll('.modal-backdrop.open').forEach(m => m.classList.remove('open')); });
+  if (sb) { const { data } = await sb.auth.getSession(); if (data.session) { STATE.user = data.session.user; showApp(); } }
+});
+</script>
+</body>
+</html>
