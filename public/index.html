@@ -225,6 +225,11 @@ button{font-family:inherit}
 }
 .field input::placeholder{color:var(--text-3)}
 .field-required::after{content:" *";color:var(--brand)}
+.field-help{font-size:11px;color:var(--text-3);margin-top:4px;font-family:'Geist Mono';line-height:1.4}
+.field-error{font-size:11px;color:var(--danger);margin-top:4px;display:flex;align-items:center;gap:5px}
+.field-error::before{content:"!";width:12px;height:12px;border-radius:50%;background:var(--danger);color:#fff;display:grid;place-items:center;font-size:9px;font-weight:700}
+.field.has-value input,.field.has-value select,.field.has-value textarea{border-color:rgba(52,211,153,.2)}
+.field.has-error input,.field.has-error select{border-color:var(--danger);background:var(--danger-soft)}
 
 /* Buttons */
 .btn{
@@ -706,7 +711,8 @@ button{font-family:inherit}
   border-color:var(--brand-line);
 }
 .chart-card.chart-feature h3{font-size:16px;letter-spacing:-.015em}
-.chart-card h3{font-size:14px;font-weight:600;font-family:'Geist';letter-spacing:-.005em;margin-bottom:2px}
+.chart-card h3{font-size:15px;font-weight:600;font-family:'Bricolage Grotesque';letter-spacing:-.015em;margin-bottom:2px;display:flex;align-items:baseline;gap:8px}
+.chart-card h3 .chart-total{font-family:'Geist Mono';font-size:12px;color:var(--text-3);font-weight:500;letter-spacing:0}
 .chart-card .desc{font-size:12px;color:var(--text-3);margin-bottom:16px}
 .chart-wrap{position:relative;height:240px}
 .chart-wrap.tall{height:300px}
@@ -785,9 +791,10 @@ tbody td{
   transition:background .15s;
 }
 tbody tr{transition:all .15s}
-tbody tr:hover td{background:var(--bg-2)}
-tbody tr.late td{background:linear-gradient(90deg, rgba(251,113,133,.06), rgba(251,113,133,.02))}
-tbody tr.aging td{background:linear-gradient(90deg, rgba(251,146,60,.05), rgba(251,146,60,.01))}
+tbody tr:nth-child(even) td{background:rgba(255,255,255,.012)}
+tbody tr:hover td{background:var(--bg-2) !important}
+tbody tr.late td{background:linear-gradient(90deg, rgba(251,113,133,.06), rgba(251,113,133,.02)) !important}
+tbody tr.aging td{background:linear-gradient(90deg, rgba(251,146,60,.05), rgba(251,146,60,.01)) !important}
 tbody tr.fresh td{
   background:linear-gradient(90deg, var(--success-soft), transparent);
   animation:fresh 2s var(--ease-out);
@@ -914,8 +921,13 @@ tbody tr.fresh td{
 .modal-foot{
   padding:14px 22px;
   border-top:1px solid var(--border);
-  display:flex; gap:10px; justify-content:flex-end;
+  display:flex; gap:10px; align-items:center;
   background:var(--bg-1);
+}
+.modal-hints{
+  font-size:11px; color:var(--text-4);
+  font-feature-settings:"ss01";
+  user-select:none;
 }
 .form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
 .form-grid .full{grid-column:span 2}
@@ -1240,13 +1252,13 @@ footer{
       <div class="kpi-grid">
         <div class="kpi kpi-hero clickable" data-kpi="all">
           <div class="label">No fluxo</div>
-          <div class="value mono" id="kpiTotal"><span class="skeleton skel-num" style="display:inline-block;width:120px;height:48px"></span></div>
+          <div class="value mono" id="kpiTotal">—</div>
           <div class="meta" id="kpiTotalMeta">total · todo o período</div>
         </div>
-        <div class="kpi pending clickable" data-kpi="pending"><div class="label">Pendentes</div><div class="value mono" id="kpiPending"><span class="skeleton skel-num" style="display:inline-block;width:60px;height:24px"></span></div><div class="meta" id="kpiPendingMeta">a fazer + em processo</div></div>
-        <div class="kpi ready clickable" data-kpi="ready"><div class="label">Prontos</div><div class="value mono" id="kpiReady"><span class="skeleton skel-num" style="display:inline-block;width:60px;height:24px"></span></div><div class="meta" id="kpiReadyMeta">no período</div></div>
-        <div class="kpi waiting clickable" data-kpi="waiting"><div class="label">Aguardando retirada</div><div class="value mono" id="kpiWaiting"><span class="skeleton skel-num" style="display:inline-block;width:60px;height:24px"></span></div><div class="meta" id="kpiWaitingMeta">prontos sem saída</div></div>
-        <div class="kpi accent"><div class="label">Tempo médio</div><div class="value mono small" id="kpiAvgTime"><span class="skeleton skel-num" style="display:inline-block;width:80px;height:20px"></span></div><div class="meta" id="kpiAvgTimeMeta">de reparo</div></div>
+        <div class="kpi pending clickable" data-kpi="pending"><div class="label">Pendentes</div><div class="value mono" id="kpiPending">—</div><div class="meta" id="kpiPendingMeta">a fazer + em processo</div></div>
+        <div class="kpi ready clickable" data-kpi="ready"><div class="label">Prontos</div><div class="value mono" id="kpiReady">—</div><div class="meta" id="kpiReadyMeta">no período</div></div>
+        <div class="kpi waiting clickable" data-kpi="waiting"><div class="label">Aguardando retirada</div><div class="value mono" id="kpiWaiting">—</div><div class="meta" id="kpiWaitingMeta">prontos sem saída</div></div>
+        <div class="kpi accent"><div class="label">Tempo médio</div><div class="value mono small" id="kpiAvgTime">—</div><div class="meta" id="kpiAvgTimeMeta">de reparo</div></div>
       </div>
 
       <div class="section-title"><h2>Alertas operacionais</h2><span class="rule"></span></div>
@@ -1260,9 +1272,9 @@ footer{
 
       <div class="section-title"><h2>Análise visual</h2><span class="rule"></span></div>
       <div class="charts-grid">
-        <div class="chart-card col-6 chart-feature"><h3>Situação atual</h3><div class="desc">Distribuição por status</div><div class="chart-wrap tall"><canvas id="chartStatus"></canvas></div></div>
-        <div class="chart-card col-3"><h3>Categoria</h3><div class="desc">Origem</div><div class="chart-wrap tall"><canvas id="chartCategory"></canvas></div></div>
-        <div class="chart-card col-3"><h3>Onde está</h3><div class="desc">Localização</div><div class="chart-wrap tall"><canvas id="chartLocation"></canvas></div></div>
+        <div class="chart-card col-6 chart-feature"><h3>Situação atual <span class="chart-total" id="chartStatusTotal"></span></h3><div class="desc">Distribuição por status</div><div class="chart-wrap tall"><canvas id="chartStatus"></canvas></div></div>
+        <div class="chart-card col-3"><h3>Categoria <span class="chart-total" id="chartCategoryTotal"></span></h3><div class="desc">Origem</div><div class="chart-wrap tall"><canvas id="chartCategory"></canvas></div></div>
+        <div class="chart-card col-3"><h3>Onde está <span class="chart-total" id="chartLocationTotal"></span></h3><div class="desc">Localização</div><div class="chart-wrap tall"><canvas id="chartLocation"></canvas></div></div>
         <div class="chart-card col-8"><h3>Aparelhos por dia</h3><div class="desc">Entradas e saídas</div><div class="chart-wrap tall"><canvas id="chartDaily"></canvas></div></div>
         <div class="chart-card col-4"><h3>Tempo médio por categoria</h3><div class="desc">Dias de reparo</div><div class="chart-wrap tall"><canvas id="chartTimeByCat"></canvas></div></div>
         <div class="chart-card col-6"><h3>Modelos mais frequentes</h3><div class="desc">Top 10</div><div class="chart-wrap tall"><canvas id="chartModels"></canvas></div></div>
@@ -1429,9 +1441,9 @@ footer{
         <input type="hidden" id="formId" value="">
         <div class="form-section-title">Identificação</div>
         <div class="form-grid" style="margin-bottom:16px">
-          <div class="field"><label class="field-required">Modelo</label><input type="text" id="fModelo" placeholder="iPhone 13 Pro Max" required></div>
+          <div class="field"><label class="field-required">Modelo</label><input type="text" id="fModelo" placeholder="iPhone 13 Pro Max" required><div class="field-help">Nome do aparelho que entrou</div></div>
           <div class="field"><label>Cor</label><input type="text" id="fCor" placeholder="Azul / Branco / Preto"></div>
-          <div class="field full"><label>IMEI</label><input type="text" id="fImei" placeholder="15 dígitos ou descrição"></div>
+          <div class="field full"><label>IMEI</label><input type="text" id="fImei" placeholder="15 dígitos ou 'Não liga'"><div class="field-help">Use o IMEI real, ou descreva se não conseguir ler</div></div>
         </div>
 
         <div class="form-section-title">Cliente</div>
@@ -1466,6 +1478,8 @@ footer{
       </form>
     </div>
     <div class="modal-foot">
+      <div class="modal-hints mono">↵ Salvar · Esc Cancelar</div>
+      <div style="flex:1"></div>
       <button class="btn" data-close>Cancelar</button>
       <button class="btn btn-primary" id="btnSaveAparelho">Salvar aparelho</button>
     </div>
@@ -1500,6 +1514,8 @@ footer{
       </form>
     </div>
     <div class="modal-foot">
+      <div class="modal-hints mono">↵ Salvar · Esc Cancelar</div>
+      <div style="flex:1"></div>
       <button class="btn" data-close>Cancelar</button>
       <button class="btn btn-primary" id="btnSaveClient">Salvar cliente</button>
     </div>
@@ -2059,7 +2075,10 @@ function applyAndRender() {
   updateNavBadges();
 }
 function updateNavBadges() {
-  document.getElementById('navBadgeAparelhos').textContent = fmtInt(STATE.rows.length);
+  const total = STATE.rows.length;
+  const filtered = STATE.filtered.length;
+  const hasFilter = filtered !== total;
+  document.getElementById('navBadgeAparelhos').textContent = hasFilter ? `${filtered}/${total}` : fmtInt(total);
   document.getElementById('navBadgeClientes').textContent = fmtInt(STATE.clients.length);
 }
 
@@ -2148,6 +2167,11 @@ function drawChart(id,type,data,options) { const ctx = document.getElementById(i
 
 function renderCharts() {
   const rows = STATE.filtered;
+  const total = rows.length;
+  // Totais nos títulos
+  const elS = document.getElementById('chartStatusTotal'); if (elS) elS.textContent = `· ${total}`;
+  const elC = document.getElementById('chartCategoryTotal'); if (elC) elC.textContent = `· ${total}`;
+  const elL = document.getElementById('chartLocationTotal'); if (elL) elL.textContent = `· ${total}`;
   const statusCount = countBy(rows, r => r.situacao || '(sem status)');
   drawChart('chartStatus','doughnut',{labels:[...statusCount.keys()],datasets:[{data:[...statusCount.values()],backgroundColor:[...statusCount.keys()].map((k,i)=>colorFor(STATUS_COLORS,k,i)),borderColor:'#101013',borderWidth:3,hoverOffset:8}]},{cutout:'65%',plugins:{...baseChartOpts().plugins,legend:legendCfg()},scales:{}});
   const catCount = countBy(rows, r => r.categoria || '(sem cat.)');
