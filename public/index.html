@@ -911,7 +911,26 @@ tbody tr.fresh td{
 .skel-line{height:14px;border-radius:var(--r-sm)}
 .skel-num{height:32px;border-radius:var(--r-sm);width:70%}
 
-footer{
+.kpi.clickable{cursor:pointer}
+.kpi.clickable:active{transform:translateY(0)}
+.kpi.clickable:hover::before{background:linear-gradient(90deg, transparent, var(--brand-line), transparent);height:2px}
+
+/* Detail timeline */
+.detail-grid{display:grid;grid-template-columns:140px 1fr;gap:8px 16px;margin-bottom:24px;font-size:13px}
+.detail-grid dt{color:var(--text-3);font-size:11px;text-transform:uppercase;letter-spacing:.1em;font-weight:500;padding-top:2px}
+.detail-grid dd{margin:0;color:var(--text-1)}
+.timeline{position:relative;padding-left:24px}
+.timeline::before{content:"";position:absolute;left:7px;top:8px;bottom:8px;width:2px;background:var(--border)}
+.tl-item{position:relative;padding:8px 0 16px;font-size:13px}
+.tl-item::before{content:"";position:absolute;left:-22px;top:12px;width:10px;height:10px;border-radius:50%;background:var(--brand);box-shadow:0 0 0 3px var(--bg-1), 0 0 8px var(--brand-glow)}
+.tl-item.create::before{background:var(--info);box-shadow:0 0 0 3px var(--bg-1), 0 0 8px var(--info)}
+.tl-item.edit::before{background:var(--warning);box-shadow:0 0 0 3px var(--bg-1)}
+.tl-item.delete::before{background:var(--danger);box-shadow:0 0 0 3px var(--bg-1)}
+.tl-item.status::before{background:var(--success);box-shadow:0 0 0 3px var(--bg-1)}
+.tl-when{font-family:'Geist Mono';font-size:11px;color:var(--text-3)}
+.tl-who{font-weight:500}
+.tl-what{color:var(--text-2);font-size:12px;margin-top:2px}
+
   padding:24px 28px;
   border-top:1px solid var(--border);
   display:flex; justify-content:space-between; align-items:center;
@@ -969,6 +988,7 @@ footer{
       <div class="nav-item active" data-page="dashboard"><span class="icon">▣</span> Dashboard</div>
       <div class="nav-item" data-page="aparelhos"><span class="icon">▤</span> Aparelhos <span class="badge mono" id="navBadgeAparelhos">0</span></div>
       <div class="nav-item" data-page="clientes"><span class="icon">◉</span> Clientes <span class="badge mono" id="navBadgeClientes">0</span></div>
+      <div class="nav-item" data-page="logs" id="navLogs" style="display:none"><span class="icon">⏱</span> Logs</div>
       <div class="nav-section">Ações rápidas</div>
       <div class="nav-item" id="navNew"><span class="icon">+</span> Novo aparelho</div>
       <div class="nav-item" id="navNewClient"><span class="icon">+</span> Novo cliente</div>
@@ -1000,10 +1020,10 @@ footer{
     <!-- DASHBOARD -->
     <div id="page-dashboard" class="page active">
       <div class="kpi-grid">
-        <div class="kpi"><div class="label">No fluxo</div><div class="value mono" id="kpiTotal">—</div><div class="meta" id="kpiTotalMeta">total</div></div>
-        <div class="kpi pending"><div class="label">Pendentes</div><div class="value mono" id="kpiPending">—</div><div class="meta" id="kpiPendingMeta">a fazer + em processo</div></div>
-        <div class="kpi ready"><div class="label">Prontos</div><div class="value mono" id="kpiReady">—</div><div class="meta" id="kpiReadyMeta">no período</div></div>
-        <div class="kpi waiting"><div class="label">Aguardando retirada</div><div class="value mono" id="kpiWaiting">—</div><div class="meta" id="kpiWaitingMeta">prontos sem saída</div></div>
+        <div class="kpi clickable" data-kpi="all"><div class="label">No fluxo</div><div class="value mono" id="kpiTotal">—</div><div class="meta" id="kpiTotalMeta">total</div></div>
+        <div class="kpi pending clickable" data-kpi="pending"><div class="label">Pendentes</div><div class="value mono" id="kpiPending">—</div><div class="meta" id="kpiPendingMeta">a fazer + em processo</div></div>
+        <div class="kpi ready clickable" data-kpi="ready"><div class="label">Prontos</div><div class="value mono" id="kpiReady">—</div><div class="meta" id="kpiReadyMeta">no período</div></div>
+        <div class="kpi waiting clickable" data-kpi="waiting"><div class="label">Aguardando retirada</div><div class="value mono" id="kpiWaiting">—</div><div class="meta" id="kpiWaitingMeta">prontos sem saída</div></div>
         <div class="kpi accent"><div class="label">Tempo médio</div><div class="value mono small" id="kpiAvgTime">—</div><div class="meta" id="kpiAvgTimeMeta">de reparo</div></div>
       </div>
 
@@ -1096,10 +1116,70 @@ footer{
       </div>
     </div>
 
+    <!-- LOGS -->
+    <div id="page-logs" class="page">
+      <div style="display:flex; gap:10px; margin-bottom:16px; align-items:center; flex-wrap:wrap">
+        <select id="logFilterUser" class="toolbar-select"><option value="">Todos os usuários</option></select>
+        <select id="logFilterAcao" class="toolbar-select">
+          <option value="">Todas as ações</option>
+          <option value="CRIAR">Criar</option>
+          <option value="EDITAR">Editar</option>
+          <option value="EXCLUIR">Excluir</option>
+          <option value="STATUS">Mudança de status</option>
+        </select>
+        <select id="logFilterEntidade" class="toolbar-select">
+          <option value="">Todas as entidades</option>
+          <option value="aparelho">Aparelhos</option>
+          <option value="cliente">Clientes</option>
+        </select>
+        <span style="flex:1"></span>
+        <span class="loading" id="logsCount"></span>
+      </div>
+      <div class="table-card">
+        <div class="table-toolbar">
+          <input id="searchLog" class="search-input" placeholder="Buscar nos logs…">
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Quando</th>
+                <th>Quem</th>
+                <th>Ação</th>
+                <th>Entidade</th>
+                <th>Detalhes</th>
+              </tr>
+            </thead>
+            <tbody id="logsBody">
+              <tr><td colspan="5" class="empty"><div class="loading"><span class="spinner"></span> Carregando…</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <footer>
       <div>Fast Repair · Mids</div>
       <div class="mono" id="lastUpdate">—</div>
     </footer>
+  </div>
+</div>
+
+<!-- MODAL DETALHE APARELHO -->
+<div id="modalDetail" class="modal-backdrop">
+  <div class="modal" style="max-width:720px">
+    <div class="modal-head">
+      <div>
+        <h3 id="detailTitle">Detalhes do aparelho</h3>
+        <div class="sub" id="detailSub">—</div>
+      </div>
+      <button class="modal-close" data-close>×</button>
+    </div>
+    <div class="modal-body" id="detailBody"></div>
+    <div class="modal-foot">
+      <button class="btn" data-close>Fechar</button>
+      <button class="btn btn-primary" id="btnDetailEdit">Editar</button>
+    </div>
   </div>
 </div>
 
@@ -1218,7 +1298,7 @@ footer{
    ============================================================ */
 const SUPABASE_URL = 'https://mcymrwozfuvwnufpovey.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_OpSaT7yXWPPs25yNWxgktg_D77iFkmr';
-const CONFIG = { AGING_DAYS: 3, WAITING_REMINDER_DAYS: 3 };
+const CONFIG = { AGING_DAYS: 3, WAITING_REMINDER_DAYS: 3, ADMIN_EMAIL: 'fabriciofagundes1@hotmail.com' };
 
 let sb = null;
 if (SUPABASE_URL && SUPABASE_KEY) sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -1231,6 +1311,7 @@ const STATE = {
   sort: { key:'dataChegou', dir:'desc' },
   charts: {}, currentPage: 'dashboard', realtimeChannel: null,
   freshIds: new Set(),
+  logs: null,
 };
 
 /* ============================================================
@@ -1369,6 +1450,7 @@ function showApp() {
     const name = STATE.user.email.split('@')[0];
     document.getElementById('userName').textContent = name;
     document.getElementById('userAvatar').textContent = name.charAt(0).toUpperCase();
+    if (isAdmin()) document.getElementById('navLogs').style.display = 'flex';
   }
   loadAll(); subscribeRealtime();
 }
@@ -1412,6 +1494,18 @@ async function loadClientes() {
   STATE.clients = data || [];
 }
 
+async function logAction(acao, entidade, entidadeId, detalhes) {
+  if (!STATE.user) return;
+  try {
+    await sb.from('activity_log').insert({
+      acao, entidade, entidade_id: entidadeId || null,
+      detalhes: detalhes || null,
+      usuario_id: STATE.user.id, usuario_email: STATE.user.email,
+    });
+  } catch(e) { /* fail silent */ }
+}
+const isAdmin = () => STATE.user?.email === CONFIG.ADMIN_EMAIL;
+
 async function createAparelho(formData) {
   const dbData = rowToDb(formData, STATE.user?.id);
   if (!dbData.modelo) return { error: 'Modelo é obrigatório' };
@@ -1423,26 +1517,32 @@ async function createAparelho(formData) {
   if (error) return { error: error.message };
   STATE.freshIds.add(data.id);
   setTimeout(() => STATE.freshIds.delete(data.id), 3000);
+  await logAction('CRIAR', 'aparelho', data.id, `${data.modelo} ${data.cor||''}`.trim());
   return { data };
 }
 async function updateAparelho(id, formData) {
   const dbData = rowToDb(formData, STATE.user?.id);
   const { error } = await sb.from('aparelhos').update(dbData).eq('id', id);
   if (error) return { error: error.message };
+  const r = STATE.rows.find(x => x.id === id);
+  await logAction('EDITAR', 'aparelho', id, `${r?.modelo||''} ${r?.cor||''}`.trim());
   return { ok: true };
 }
 async function deleteAparelhoById(id) {
-  // Soft delete
+  const r = STATE.rows.find(x => x.id === id);
   const { error } = await sb.from('aparelhos').update({ deleted_at: new Date().toISOString() }).eq('id', id);
   if (error) return { error: error.message };
+  await logAction('EXCLUIR', 'aparelho', id, `${r?.modelo||''} ${r?.cor||''}`.trim());
   return { ok: true };
 }
 async function changeStatus(id, status) {
   const update = { situacao: status };
-  if (status === 'PRONTO') { const r = STATE.rows.find(x => x.id === id); if (r && !r.dataSaida) update.data_saida = todayISO(); }
+  const r = STATE.rows.find(x => x.id === id);
+  if (status === 'PRONTO') { if (r && !r.dataSaida) update.data_saida = todayISO(); }
   if (STATE.user?.id) update.updated_by = STATE.user.id;
   const { error } = await sb.from('aparelhos').update(update).eq('id', id);
   if (error) return { error: error.message };
+  await logAction('STATUS:'+status, 'aparelho', id, `${r?.modelo||''} ${r?.cor||''}`.trim());
   return { ok: true };
 }
 
@@ -1456,6 +1556,7 @@ async function createClient(formData) {
   };
   const { data, error } = await sb.from('clientes').insert(dbData).select().single();
   if (error) return { error: error.message };
+  await logAction('CRIAR', 'cliente', data.id, data.nome);
   return { data };
 }
 async function updateClient(id, formData) {
@@ -1467,11 +1568,14 @@ async function updateClient(id, formData) {
   };
   const { error } = await sb.from('clientes').update(dbData).eq('id', id);
   if (error) return { error: error.message };
+  await logAction('EDITAR', 'cliente', id, formData.nome);
   return { ok: true };
 }
 async function deleteClientById(id) {
+  const c = STATE.clients.find(x => x.id === id);
   const { error } = await sb.from('clientes').update({ deleted_at: new Date().toISOString() }).eq('id', id);
   if (error) return { error: error.message };
+  await logAction('EXCLUIR', 'cliente', id, c?.nome || '');
   return { ok: true };
 }
 
@@ -1484,8 +1588,114 @@ function subscribeRealtime() {
 }
 
 /* ============================================================
-   FILTERS / RENDER
+   LOGS (admin only)
    ============================================================ */
+async function loadLogs() {
+  if (!isAdmin()) return;
+  const body = document.getElementById('logsBody');
+  body.innerHTML = '<tr><td colspan="5" class="empty"><div class="loading"><span class="spinner"></span> Carregando…</div></td></tr>';
+  const { data, error } = await sb.from('activity_log').select('*').order('created_at', { ascending: false }).limit(500);
+  if (error) { body.innerHTML = `<tr><td colspan="5" class="empty">Erro: ${escapeHtml(error.message)}</td></tr>`; return; }
+  STATE.logs = data || [];
+  // popular filtro de usuários
+  const users = [...new Set(STATE.logs.map(l => l.usuario_email).filter(Boolean))];
+  const sel = document.getElementById('logFilterUser');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">Todos os usuários</option>' + users.map(u => `<option value="${escapeHtml(u)}">${escapeHtml(u)}</option>`).join('');
+  if (users.includes(cur)) sel.value = cur;
+  renderLogs();
+}
+function renderLogs() {
+  if (!STATE.logs) return;
+  const fUser = document.getElementById('logFilterUser').value;
+  const fAcao = document.getElementById('logFilterAcao').value;
+  const fEnt = document.getElementById('logFilterEntidade').value;
+  const q = norm(document.getElementById('searchLog').value);
+  const list = STATE.logs.filter(l => {
+    if (fUser && l.usuario_email !== fUser) return false;
+    if (fAcao) {
+      if (fAcao === 'STATUS' && !String(l.acao||'').startsWith('STATUS')) return false;
+      if (fAcao !== 'STATUS' && l.acao !== fAcao) return false;
+    }
+    if (fEnt && l.entidade !== fEnt) return false;
+    if (q) { const blob = norm([l.acao,l.entidade,l.detalhes,l.usuario_email].join(' ')); if (!blob.includes(q)) return false; }
+    return true;
+  });
+  document.getElementById('logsCount').textContent = `${fmtInt(list.length)} eventos`;
+  const body = document.getElementById('logsBody');
+  if (!list.length) { body.innerHTML = '<tr><td colspan="5" class="empty"><h3>Nenhum log</h3></td></tr>'; return; }
+  body.innerHTML = list.map(l => {
+    const dt = new Date(l.created_at);
+    const when = dt.toLocaleString('pt-BR');
+    const acaoCls = String(l.acao||'').includes('CRIAR') ? 's-fazer' : String(l.acao||'').includes('EDITAR') ? 's-processo' : String(l.acao||'').includes('EXCLUIR') ? 's-bloqueado' : String(l.acao||'').includes('STATUS') ? 's-pronto' : '';
+    const who = l.usuario_email ? l.usuario_email.split('@')[0] : '<span class="muted">—</span>';
+    return `<tr>
+      <td class="mono" style="font-size:11.5px">${when}</td>
+      <td><strong>${escapeHtml(who)}</strong></td>
+      <td><span class="tag ${acaoCls}">${escapeHtml(l.acao)}</span></td>
+      <td><span class="muted">${escapeHtml(l.entidade)}</span> ${l.entidade_id?`<span class="mono" style="font-size:11px">#${l.entidade_id}</span>`:''}</td>
+      <td>${escapeHtml(l.detalhes||'')||'<span class="muted">—</span>'}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ============================================================
+   DETAIL MODAL
+   ============================================================ */
+async function openDetail(id) {
+  const r = STATE.rows.find(x => x.id === id);
+  if (!r) return toast('Aparelho não encontrado', 'err');
+  document.getElementById('detailTitle').textContent = `${r.modelo} ${r.cor||''}`.trim();
+  document.getElementById('detailSub').textContent = r.cliente?.nome || (r.imei && isRealImei(r.imei) ? `IMEI ${r.imei}` : 'Sem cliente vinculado');
+  const sCls = statusClass(r.situacao);
+  const cCls = categoryClass(r.categoria);
+  const wppBtn = r.cliente?.telefone ? `<button class="btn btn-success btn-sm" onclick="openWhatsApp(STATE.rows.find(x=>x.id===${id}))">📱 WhatsApp</button>` : '';
+  let html = `
+    <dl class="detail-grid">
+      <dt>Status</dt><dd>${r.situacao?`<span class="tag ${sCls}">${escapeHtml(r.situacao)}</span>`:'—'}</dd>
+      <dt>Categoria</dt><dd>${r.categoria?`<span class="tag ${cCls}">${escapeHtml(r.categoria)}</span>`:'—'}</dd>
+      <dt>Onde está</dt><dd>${r.ondeEsta?`<span class="tag loc">${escapeHtml(r.ondeEsta)}</span>`:'—'}</dd>
+      <dt>Cliente</dt><dd>${r.cliente?`<strong>${escapeHtml(r.cliente.nome)}</strong> ${r.cliente.telefone?'<span class="mono muted" style="font-size:12px">'+escapeHtml(phoneMask(r.cliente.telefone))+'</span>':''} ${wppBtn}`:'<span class="muted">sem cliente</span>'}</dd>
+      <dt>IMEI</dt><dd class="mono">${escapeHtml(r.imei||'—')}</dd>
+      <dt>O que fazer</dt><dd>${escapeHtml(r.oqueFazer||'—')}</dd>
+      <dt>O que fez</dt><dd>${escapeHtml(r.oqueFez||'—')}</dd>
+      <dt>Observação</dt><dd>${escapeHtml(r.obs||'—')}</dd>
+      <dt>Chegou</dt><dd class="mono">${isoToBR(r.dataChegou)||'—'}</dd>
+      <dt>Saída</dt><dd class="mono">${isoToBR(r.dataSaida)||'<span class="muted">em aberto</span>'}</dd>
+      <dt>Prazo</dt><dd class="mono">${isoToBR(r.prazo)||'—'}</dd>
+      <dt>Dias</dt><dd class="mono">${r.dias!=null?r.dias.toFixed(1).replace('.',',')+' d':r.diasEmAberto!=null?'↻ '+Math.floor(r.diasEmAberto)+' d em aberto':'—'}</dd>
+    </dl>
+  `;
+  // Timeline
+  const { data: logs } = await sb.from('activity_log').select('*').eq('entidade','aparelho').eq('entidade_id', id).order('created_at', { ascending: false }).limit(50);
+  if (logs && logs.length) {
+    html += `<div class="form-section-title" style="margin-bottom:12px">Histórico</div><div class="timeline">`;
+    for (const l of logs) {
+      const dt = new Date(l.created_at).toLocaleString('pt-BR');
+      const cls = String(l.acao||'').includes('CRIAR') ? 'create' : String(l.acao||'').includes('EDITAR') ? 'edit' : String(l.acao||'').includes('EXCLUIR') ? 'delete' : String(l.acao||'').includes('STATUS') ? 'status' : '';
+      const who = l.usuario_email ? l.usuario_email.split('@')[0] : '?';
+      html += `<div class="tl-item ${cls}">
+        <div class="tl-when">${dt}</div>
+        <div><span class="tl-who">${escapeHtml(who)}</span> · <span class="muted">${escapeHtml(l.acao)}</span></div>
+        ${l.detalhes?`<div class="tl-what">${escapeHtml(l.detalhes)}</div>`:''}
+      </div>`;
+    }
+    html += `</div>`;
+  } else {
+    html += `<div class="form-section-title" style="margin-bottom:12px">Histórico</div><p class="muted" style="font-size:12px">Sem histórico registrado.</p>`;
+  }
+  document.getElementById('detailBody').innerHTML = html;
+  document.getElementById('btnDetailEdit').onclick = () => {
+    document.getElementById('modalDetail').classList.remove('open');
+    setTimeout(() => openForm(id), 200);
+  };
+  document.getElementById('modalDetail').classList.add('open');
+}
+window.openDetail = openDetail;
+window.STATE = STATE;
+window.openWhatsApp = openWhatsApp;
+
+
 function populateFilters() {
   const months = new Map();
   for (const r of STATE.rows) { const k = ymKey(r._dataChegou); if (k) months.set(k, (months.get(k)||0)+1); }
@@ -1996,11 +2206,13 @@ function goTo(page) {
     dashboard: ['Dashboard', 'Visão geral da operação'],
     aparelhos: ['Aparelhos', 'Cadastro e gestão'],
     clientes: ['Clientes', 'Base de contatos'],
+    logs: ['Logs', 'Histórico de atividades'],
   };
   const t = titles[page] || ['', ''];
   document.getElementById('pageTitle').textContent = t[0];
   document.getElementById('pageSub').textContent = t[1];
   applyAndRender();
+  if (page === 'logs') loadLogs();
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -2019,7 +2231,35 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('filterCategory').addEventListener('change', e => { STATE.filters.categoria = e.target.value; applyAndRender(); });
   document.getElementById('filterLocation').addEventListener('change', e => { STATE.filters.ondeEsta = e.target.value; applyAndRender(); });
   document.getElementById('tableHead').addEventListener('click', e => { const th = e.target.closest('th[data-sort]'); if (!th) return; const key = th.dataset.sort; if (STATE.sort.key === key) STATE.sort.dir = STATE.sort.dir==='asc'?'desc':'asc'; else { STATE.sort.key = key; STATE.sort.dir = ['dias','dataChegou'].includes(key)?'desc':'asc'; } renderTable(); });
-  document.getElementById('tableBody').addEventListener('click', e => { const btn = e.target.closest('[data-action]'); if (!btn) return; quickAction(btn.dataset.action, parseInt(btn.dataset.id)); });
+  document.getElementById('tableBody').addEventListener('click', e => {
+    const btn = e.target.closest('[data-action]');
+    if (btn) { quickAction(btn.dataset.action, parseInt(btn.dataset.id)); return; }
+    const tr = e.target.closest('tr');
+    if (!tr) return;
+    // Detecta o id da linha pelo botão de editar dentro dela
+    const editBtn = tr.querySelector('[data-action="edit"]');
+    if (editBtn) openDetail(parseInt(editBtn.dataset.id));
+  });
+
+  // KPI click — filtra a tabela direto
+  document.querySelectorAll('.kpi.clickable').forEach(k => {
+    k.addEventListener('click', () => {
+      const kind = k.dataset.kpi;
+      goTo('aparelhos');
+      const f = document.getElementById('filterStatus');
+      if (kind === 'all') { STATE.filters.status=''; f.value=''; }
+      else if (kind === 'pending') { STATE.filters.status=''; f.value=''; STATE.search='EM PROCESSO'; document.getElementById('searchInput').value='EM PROCESSO'; }
+      else if (kind === 'ready') { STATE.filters.status='PRONTO'; f.value='PRONTO'; }
+      else if (kind === 'waiting') { STATE.filters.status='PRONTO'; f.value='PRONTO'; STATE.search=''; document.getElementById('searchInput').value=''; }
+      applyAndRender();
+    });
+  });
+
+  // Filtros de logs
+  ['logFilterUser','logFilterAcao','logFilterEntidade'].forEach(id => {
+    document.getElementById(id).addEventListener('change', renderLogs);
+  });
+  document.getElementById('searchLog').addEventListener('input', renderLogs);
   document.getElementById('clientesBody').addEventListener('click', e => { const btn = e.target.closest('[data-caction]'); if (!btn) return; clientAction(btn.dataset.caction, parseInt(btn.dataset.cid)); });
   document.querySelectorAll('[data-close]').forEach(el => el.addEventListener('click', () => el.closest('.modal-backdrop').classList.remove('open')));
   document.getElementById('btnSaveAparelho').addEventListener('click', saveForm);
