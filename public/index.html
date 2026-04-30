@@ -543,10 +543,11 @@ button{font-family:inherit}
 .kpi-hero .value{
   font-size:56px !important;
   margin-top:10px !important;
-  background:linear-gradient(180deg, #fde388 0%, var(--brand) 50%, var(--brand-dark) 100%) !important;
+  display:inline-block;
+  background:linear-gradient(180deg, #fde388 0%, var(--brand) 50%, var(--brand-dark) 100%);
   -webkit-background-clip:text; background-clip:text;
   -webkit-text-fill-color:transparent;
-  text-shadow:0 0 40px var(--brand-glow);
+  filter:drop-shadow(0 4px 20px var(--brand-glow));
 }
 .kpi-hero .meta{font-size:12px}
 @media(max-width:900px){.kpi-hero .value{font-size:48px !important}}
@@ -2117,7 +2118,7 @@ function renderKPIs() {
   const completed = rows.filter(r=>r.dias!=null && r.dias>=0);
   const avgTime = completed.length ? completed.reduce((s,r)=>s+r.dias,0)/completed.length : null;
 
-  animateCounter(document.getElementById('kpiTotal'), total);
+  document.getElementById('kpiTotal').textContent = fmtInt(total);
   animateCounter(document.getElementById('kpiPending'), pending);
   animateCounter(document.getElementById('kpiReady'), ready);
   animateCounter(document.getElementById('kpiWaiting'), waiting);
