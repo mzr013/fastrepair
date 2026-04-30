@@ -165,6 +165,9 @@ button{font-family:inherit}
   background:linear-gradient(180deg, rgba(255,255,255,.2), transparent 50%);
   pointer-events:none;
 }
+/* Quando tem imagem dentro, remove o gradiente do container */
+.brand-mark:has(img){background:none;box-shadow:0 4px 24px -4px var(--brand-glow)}
+.brand-mark:has(img)::after{display:none}
 .brand-mark img{width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block}
 .login-brand .name{font-family:'Bricolage Grotesque';font-size:24px;font-weight:700;letter-spacing:-.025em;line-height:1}
 .login-brand .sub{font-family:'Geist Mono';font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.18em;margin-top:4px}
