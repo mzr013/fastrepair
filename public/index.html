@@ -87,6 +87,34 @@
   --ease-smooth:cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* TEMA LIGHT */
+[data-theme="light"]{
+  --bg-0:#fafafa;
+  --bg-1:#ffffff;
+  --bg-2:#f5f5f7;
+  --bg-3:#ebebef;
+  --bg-4:#e0e0e6;
+  --border:#e5e5ea;
+  --border-strong:#d1d1d6;
+  --border-bright:#c7c7cc;
+  --text-1:#1a1a1f;
+  --text-2:#52525b;
+  --text-3:#71717a;
+  --text-4:#a1a1aa;
+  --brand-soft:rgba(251,191,36,.14);
+  --brand-soft-2:rgba(251,191,36,.22);
+  --shadow-xs:0 1px 2px rgba(0,0,0,.06), 0 0 0 1px rgba(0,0,0,.02) inset;
+  --shadow-sm:0 2px 4px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 8px rgba(0,0,0,.08), 0 2px 4px rgba(0,0,0,.04);
+  --shadow-lg:0 12px 24px -8px rgba(0,0,0,.12), 0 4px 8px rgba(0,0,0,.06);
+  --shadow-xl:0 24px 48px -12px rgba(0,0,0,.18), 0 8px 16px rgba(0,0,0,.08);
+}
+[data-theme="light"] body{
+  background-image:
+    radial-gradient(1400px 700px at 85% -8%, rgba(251,191,36,.08), transparent 60%),
+    radial-gradient(900px 500px at -10% 0%, rgba(167,139,250,.04), transparent 65%);
+}
+
 *,*::before,*::after{box-sizing:border-box}
 html,body{margin:0;padding:0}
 html{scroll-behavior:smooth}
@@ -995,10 +1023,99 @@ tbody tr.fresh td{
   background-size:200% 100%;
   animation:shimmer 1.4s linear infinite;
   border-radius:var(--r-sm);
+  -webkit-text-fill-color:initial;
+  color:transparent;
 }
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 .skel-line{height:14px;border-radius:var(--r-sm)}
 .skel-num{height:32px;border-radius:var(--r-sm);width:70%}
+
+/* ============================================================
+   FILTER CHIPS
+   ============================================================ */
+.filter-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;min-height:0}
+.filter-chips:empty{display:none}
+.chip{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:5px 10px 5px 12px;
+  background:var(--brand-soft);
+  border:1px solid var(--brand-line);
+  border-radius:var(--r-full);
+  font-size:11px; font-weight:500;
+  color:var(--brand);
+  animation:popIn .25s var(--ease-spring);
+  cursor:default;
+}
+.chip-key{color:var(--text-3);font-size:10px;text-transform:uppercase;letter-spacing:.08em;margin-right:2px}
+.chip-x{
+  width:14px;height:14px;border-radius:50%;
+  background:rgba(251,191,36,.2);
+  display:grid;place-items:center;
+  cursor:pointer;font-size:10px;line-height:1;
+  transition:all .15s;
+}
+.chip-x:hover{background:var(--brand);color:var(--brand-ink)}
+.chip-clear{
+  padding:5px 10px;font-size:11px;
+  color:var(--text-3);
+  background:transparent;border:none;cursor:pointer;
+  border-radius:var(--r-full);
+  transition:all .15s;
+}
+.chip-clear:hover{color:var(--danger);background:var(--danger-soft)}
+
+/* ============================================================
+   DENSITY
+   ============================================================ */
+.table-card.compact tbody td{padding:6px 12px;font-size:12px}
+.table-card.compact tbody td .tag{padding:2px 7px;font-size:10px}
+.table-card.compact tbody td .quick-btn{padding:4px 7px}
+.table-card.compact .cliente-cell .name{font-size:12px}
+.table-card.compact .cliente-cell .imei{font-size:10px}
+#densityToggle.active{color:var(--brand);border-color:var(--brand-line);background:var(--brand-soft)}
+
+/* ============================================================
+   TOAST UNDO
+   ============================================================ */
+.toast.undo{cursor:default}
+.toast .toast-action{
+  background:transparent;border:1px solid var(--border-strong);
+  color:var(--brand);font-weight:600;font-size:12px;
+  padding:5px 12px;border-radius:var(--r-sm);
+  cursor:pointer;margin-left:6px;transition:all .15s;
+}
+.toast .toast-action:hover{background:var(--brand-soft);border-color:var(--brand)}
+
+/* ============================================================
+   SIDE PANEL (drawer)
+   ============================================================ */
+.modal-backdrop.drawer{justify-content:flex-end;padding:0;align-items:stretch}
+.modal-backdrop.drawer .modal{
+  max-width:560px; max-height:none; height:100vh;
+  border-radius:0; border-right:none; border-top:none; border-bottom:none;
+  border-left:1px solid var(--border-strong);
+  animation:drawerIn .35s var(--ease-out);
+}
+@keyframes drawerIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
+
+/* ============================================================
+   INLINE EDIT
+   ============================================================ */
+.tag.editable{cursor:pointer;position:relative;transition:all .15s}
+.tag.editable:hover{filter:brightness(1.15);transform:translateY(-1px)}
+.tag.editable::after{content:"⌄";margin-left:4px;opacity:.5;font-size:10px}
+.inline-select{
+  background:var(--bg-3);
+  border:1px solid var(--brand);
+  border-radius:var(--r-sm);
+  padding:3px 8px;
+  font-size:11px;
+  color:var(--text-1);
+  font-family:inherit;
+  outline:none;
+  box-shadow:0 0 0 3px var(--brand-soft);
+}
+
 
 .kpi.clickable{cursor:pointer}
 .kpi.clickable:active{transform:translateY(2px) !important;transition:transform .05s !important;box-shadow:var(--shadow-xs) !important}
@@ -1103,6 +1220,10 @@ footer{
         <select id="periodSelect" class="toolbar-select">
           <option value="all">Todo o período</option>
         </select>
+        <button id="themeToggle" class="btn btn-ghost" title="Alternar tema (Ctrl+Shift+L)" aria-label="Tema">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
         <button id="refreshBtn" class="btn btn-ghost" title="Atualizar dados">↻</button>
       </div>
     </header>
@@ -1151,12 +1272,16 @@ footer{
 
     <!-- APARELHOS -->
     <div id="page-aparelhos" class="page">
-      <div style="display:flex; gap:10px; margin-bottom:16px; align-items:center; flex-wrap:wrap">
+      <div style="display:flex; gap:10px; margin-bottom:14px; align-items:center; flex-wrap:wrap">
         <button class="btn btn-primary" id="btnNewAparelho">+ Novo aparelho</button>
+        <button class="btn btn-ghost" id="densityToggle" title="Alternar densidade da tabela" aria-label="Densidade">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
         <span style="flex:1"></span>
         <span class="loading" id="aparelhosCount"></span>
       </div>
-      <div class="table-card">
+      <div id="filterChips" class="filter-chips"></div>
+      <div class="table-card" id="tableCard">
         <div class="table-toolbar">
           <input id="searchInput" class="search-input" placeholder="Buscar por modelo, IMEI, cliente, reparo, observação…">
           <select id="filterStatus" class="toolbar-select"><option value="">Todos status</option></select>
@@ -1289,8 +1414,8 @@ footer{
   </div>
 </div>
 
-<!-- MODAL APARELHO -->
-<div id="modalForm" class="modal-backdrop">
+<!-- MODAL APARELHO (drawer) -->
+<div id="modalForm" class="modal-backdrop drawer">
   <div class="modal">
     <div class="modal-head">
       <div>
@@ -1347,8 +1472,8 @@ footer{
   </div>
 </div>
 
-<!-- MODAL CLIENTE -->
-<div id="modalClient" class="modal-backdrop">
+<!-- MODAL CLIENTE (drawer) -->
+<div id="modalClient" class="modal-backdrop drawer">
   <div class="modal" style="max-width:520px">
     <div class="modal-head">
       <div>
@@ -1418,6 +1543,7 @@ const STATE = {
   charts: {}, currentPage: 'dashboard', realtimeChannel: null,
   freshIds: new Set(),
   logs: null,
+  density: 'comfortable',
 };
 
 /* ============================================================
@@ -1476,7 +1602,72 @@ const categoryClass = s => { const n = norm(s); if (n.includes('estoque')) retur
 let toastTimer;
 function toast(msg, kind='') { const t = document.getElementById('toast'); t.textContent = msg; t.className = 'toast show ' + kind; clearTimeout(toastTimer); toastTimer = setTimeout(() => t.className = 'toast ' + kind, 3500); }
 
-/* Number counter animation */
+/* ============================================================
+   THEME / DENSITY / PREFS
+   ============================================================ */
+function applyTheme(theme) {
+  if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+  else document.documentElement.removeAttribute('data-theme');
+  document.querySelector('#themeToggle .icon-sun').style.display = theme === 'light' ? 'none' : 'block';
+  document.querySelector('#themeToggle .icon-moon').style.display = theme === 'light' ? 'block' : 'none';
+  try { localStorage.setItem('fr_theme', theme); } catch(e){}
+}
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme');
+  applyTheme(cur === 'light' ? 'dark' : 'light');
+}
+function applyDensity(d) {
+  STATE.density = d;
+  document.getElementById('tableCard')?.classList.toggle('compact', d === 'compact');
+  document.getElementById('densityToggle')?.classList.toggle('active', d === 'compact');
+  try { localStorage.setItem('fr_density', d); } catch(e){}
+}
+function loadPrefs() {
+  try {
+    const t = localStorage.getItem('fr_theme') || 'dark';
+    applyTheme(t);
+    const d = localStorage.getItem('fr_density') || 'comfortable';
+    applyDensity(d);
+  } catch(e) { applyTheme('dark'); applyDensity('comfortable'); }
+}
+
+/* ============================================================
+   FILTER CHIPS
+   ============================================================ */
+function renderChips() {
+  const box = document.getElementById('filterChips');
+  if (!box) return;
+  const chips = [];
+  if (STATE.search) chips.push({key:'busca', value:STATE.search, clear:() => { STATE.search=''; document.getElementById('searchInput').value=''; }});
+  if (STATE.filters.status) chips.push({key:'status', value:STATE.filters.status, clear:() => { STATE.filters.status=''; document.getElementById('filterStatus').value=''; }});
+  if (STATE.filters.categoria) chips.push({key:'categoria', value:STATE.filters.categoria, clear:() => { STATE.filters.categoria=''; document.getElementById('filterCategory').value=''; }});
+  if (STATE.filters.ondeEsta) chips.push({key:'onde', value:STATE.filters.ondeEsta, clear:() => { STATE.filters.ondeEsta=''; document.getElementById('filterLocation').value=''; }});
+  if (STATE.period && STATE.period !== 'all') chips.push({key:'período', value:ymLabel(STATE.period), clear:() => { STATE.period='all'; document.getElementById('periodSelect').value='all'; }});
+  if (!chips.length) { box.innerHTML = ''; return; }
+  let html = chips.map((c,i)=>`<span class="chip"><span class="chip-key">${escapeHtml(c.key)}</span>${escapeHtml(c.value)}<span class="chip-x" data-chip="${i}">×</span></span>`).join('');
+  if (chips.length > 1) html += `<button class="chip-clear" id="chipClearAll">Limpar tudo</button>`;
+  box.innerHTML = html;
+  STATE._chipClearers = chips.map(c => c.clear);
+}
+
+/* ============================================================
+   TOAST UNDO
+   ============================================================ */
+let undoTimer;
+function toastUndo(msg, onUndo) {
+  const t = document.getElementById('toast');
+  t.innerHTML = `<span>${escapeHtml(msg)}</span><button class="toast-action" id="toastUndoBtn">Desfazer</button>`;
+  t.className = 'toast show undo';
+  clearTimeout(undoTimer);
+  document.getElementById('toastUndoBtn').onclick = async () => {
+    clearTimeout(undoTimer);
+    t.className = 'toast undo';
+    await onUndo();
+  };
+  undoTimer = setTimeout(() => { t.className = 'toast undo'; }, 6000);
+}
+
+
 function animateCounter(el, to, duration=600) {
   const from = parseInt(el.dataset.current || '0', 10);
   if (from === to) { el.textContent = fmtInt(to); return; }
@@ -1639,6 +1830,18 @@ async function deleteAparelhoById(id) {
   const { error } = await sb.from('aparelhos').update({ deleted_at: new Date().toISOString() }).eq('id', id);
   if (error) return { error: error.message };
   await logAction('EXCLUIR', 'aparelho', id, `${r?.modelo||''} ${r?.cor||''}`.trim());
+  return { ok: true };
+}
+async function restoreAparelhoById(id) {
+  const { error } = await sb.from('aparelhos').update({ deleted_at: null }).eq('id', id);
+  if (error) return { error: error.message };
+  await logAction('RESTAURAR', 'aparelho', id, '');
+  return { ok: true };
+}
+async function restoreClientById(id) {
+  const { error } = await sb.from('clientes').update({ deleted_at: null }).eq('id', id);
+  if (error) return { error: error.message };
+  await logAction('RESTAURAR', 'cliente', id, '');
   return { ok: true };
 }
 async function changeStatus(id, status) {
@@ -1849,6 +2052,7 @@ function applyFilters() {
 }
 function applyAndRender() {
   applyFilters();
+  renderChips();
   if (STATE.currentPage==='dashboard') { updateGreeting(); renderKPIs(); renderInsights(); renderCharts(); }
   else if (STATE.currentPage==='aparelhos') renderTable();
   else if (STATE.currentPage==='clientes') renderClientes();
@@ -2038,7 +2242,7 @@ function renderTable() {
       <td><span class="muted">${escapeHtml(r.cor||'')}</span></td>
       <td>${clienteCell}</td>
       <td>${r.categoria?`<span class="tag ${cCls}">${escapeHtml(r.categoria)}</span>`:'<span class="muted">—</span>'}</td>
-      <td>${r.situacao?`<span class="tag ${sCls}">${escapeHtml(r.situacao)}</span>`:'<span class="muted">—</span>'}</td>
+      <td>${r.situacao?`<span class="tag ${sCls} editable" data-edit-status="${r.id}">${escapeHtml(r.situacao)}</span>`:'<span class="muted">—</span>'}</td>
       <td>${r.ondeEsta?`<span class="tag loc">${escapeHtml(r.ondeEsta)}</span>`:'<span class="muted">—</span>'}</td>
       <td style="max-width:240px"><span style="font-size:12.5px">${escapeHtml(r.oqueFazer||'')||'<span class="muted">—</span>'}</span></td>
       <td><div class="actions-cell">${qa}</div></td>
@@ -2302,7 +2506,17 @@ async function quickAction(action, id) {
   if (action === 'edit') return openForm(id);
   if (action === 'wpp') return openWhatsApp(r);
   if (action === 'delete') {
-    confirmDialog({ title: 'Excluir aparelho?', message: `${r.modelo} ${r.cor||''}${r.cliente?.nome ? ' — ' + r.cliente.nome : ''}. Vai pra lixeira (não é apagado de verdade).`, okLabel: 'Excluir', onConfirm: async () => { const res = await deleteAparelhoById(id); if (res.error) return toast(res.error, 'err'); toast('✓ Aparelho excluído', 'ok'); await loadAll(); } });
+    confirmDialog({ title: 'Excluir aparelho?', message: `${r.modelo} ${r.cor||''}${r.cliente?.nome ? ' — ' + r.cliente.nome : ''}.`, okLabel: 'Excluir', onConfirm: async () => {
+      const res = await deleteAparelhoById(id);
+      if (res.error) return toast(res.error, 'err');
+      await loadAll();
+      toastUndo(`✓ Aparelho excluído`, async () => {
+        const r2 = await restoreAparelhoById(id);
+        if (r2.error) return toast(r2.error, 'err');
+        toast('✓ Restaurado', 'ok');
+        await loadAll();
+      });
+    }});
   }
 }
 async function clientAction(action, id) {
@@ -2310,7 +2524,17 @@ async function clientAction(action, id) {
   if (!c) return;
   if (action === 'edit') return openClientForm(id);
   if (action === 'delete') {
-    confirmDialog({ title: 'Excluir cliente?', message: `${c.nome}. Os aparelhos vinculados ficam com "sem cliente".`, okLabel: 'Excluir', onConfirm: async () => { const res = await deleteClientById(id); if (res.error) return toast(res.error, 'err'); toast('✓ Cliente excluído', 'ok'); await loadAll(); } });
+    confirmDialog({ title: 'Excluir cliente?', message: `${c.nome}. Os aparelhos vinculados ficam com "sem cliente".`, okLabel: 'Excluir', onConfirm: async () => {
+      const res = await deleteClientById(id);
+      if (res.error) return toast(res.error, 'err');
+      await loadAll();
+      toastUndo(`✓ Cliente excluído`, async () => {
+        const r2 = await restoreClientById(id);
+        if (r2.error) return toast(r2.error, 'err');
+        toast('✓ Restaurado', 'ok');
+        await loadAll();
+      });
+    }});
   }
 }
 
@@ -2346,6 +2570,56 @@ function goTo(page) {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+  loadPrefs();
+  document.getElementById('themeToggle')?.addEventListener('click', toggleTheme);
+  document.getElementById('densityToggle')?.addEventListener('click', () => applyDensity(STATE.density === 'compact' ? 'comfortable' : 'compact'));
+
+  // Atalhos teclado
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'L' || e.key === 'l')) { e.preventDefault(); toggleTheme(); }
+  });
+
+  // Filter chips clear
+  document.getElementById('filterChips')?.addEventListener('click', e => {
+    if (e.target.id === 'chipClearAll') {
+      STATE._chipClearers?.forEach(c => c());
+      applyAndRender();
+      return;
+    }
+    const chip = e.target.closest('.chip-x');
+    if (!chip) return;
+    const idx = parseInt(chip.dataset.chip);
+    STATE._chipClearers?.[idx]?.();
+    applyAndRender();
+  });
+
+  // Inline edit status
+  document.getElementById('tableBody')?.addEventListener('click', async e => {
+    const editTag = e.target.closest('[data-edit-status]');
+    if (!editTag) return;
+    e.stopPropagation();
+    const id = parseInt(editTag.dataset.editStatus);
+    const cur = editTag.textContent.trim();
+    const opts = ['A FAZER','EM PROCESSO','VERIFICAR','PRONTO','BLOQUEADO'];
+    const sel = document.createElement('select');
+    sel.className = 'inline-select';
+    opts.forEach(o => { const op = document.createElement('option'); op.value = o; op.textContent = o; if (o === cur) op.selected = true; sel.appendChild(op); });
+    editTag.replaceWith(sel);
+    sel.focus();
+    const apply = async () => {
+      const newVal = sel.value;
+      if (newVal !== cur) {
+        const res = await changeStatus(id, newVal);
+        if (res.error) toast(res.error, 'err');
+        else toast(`✓ Status: ${newVal}`, 'ok');
+      }
+      await loadAll();
+    };
+    sel.addEventListener('change', apply);
+    sel.addEventListener('blur', apply);
+    sel.addEventListener('keydown', ev => { if (ev.key === 'Escape') loadAll(); });
+  });
+
   document.getElementById('loginForm').addEventListener('submit', e => { e.preventDefault(); doLogin(document.getElementById('loginEmail').value.trim(), document.getElementById('loginPassword').value); });
   document.getElementById('logoutBtn').addEventListener('click', doLogout);
   document.querySelectorAll('.nav-item[data-page]').forEach(el => { el.addEventListener('click', () => goTo(el.dataset.page)); });
