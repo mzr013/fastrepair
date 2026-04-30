@@ -286,13 +286,13 @@ button{font-family:inherit}
   z-index:40;
 }
 .sidebar-brand{
-  display:flex; align-items:center; gap:12px;
-  padding:20px 18px;
+  display:flex; align-items:center; gap:10px;
+  padding:14px 16px;
   border-bottom:1px solid var(--border);
 }
-.sidebar-brand .brand-mark{width:42px;height:42px;font-size:18px;border-radius:var(--r-md)}
-.sidebar-brand .name{font-size:17px;font-weight:700;letter-spacing:-.025em;font-family:'Bricolage Grotesque';line-height:1}
-.sidebar-brand .sub{font-size:10px;color:var(--text-3);font-family:'Geist Mono';text-transform:uppercase;letter-spacing:.18em;margin-top:3px}
+.sidebar-brand .brand-mark{width:36px;height:36px;font-size:16px;border-radius:var(--r-md)}
+.sidebar-brand .name{font-size:15px;font-weight:700;letter-spacing:-.025em;font-family:'Bricolage Grotesque';line-height:1}
+.sidebar-brand .sub{font-size:9px;color:var(--text-3);font-family:'Geist Mono';text-transform:uppercase;letter-spacing:.18em;margin-top:3px}
 
 .nav{flex:1;padding:14px 12px;display:flex;flex-direction:column;gap:2px;overflow-y:auto}
 .nav-section{
@@ -379,12 +379,20 @@ button{font-family:inherit}
 .main{flex:1;min-width:0;display:flex;flex-direction:column}
 .topbar{
   display:flex; align-items:center; justify-content:space-between;
-  padding:16px 28px;
+  padding:14px 28px;
   border-bottom:1px solid var(--border);
   background:rgba(10,10,11,.7);
   position:sticky; top:0; z-index:30;
   backdrop-filter:blur(12px);
   -webkit-backdrop-filter:blur(12px);
+}
+.topbar-title{position:relative;padding-left:14px}
+.topbar-title::before{
+  content:""; position:absolute; left:0; top:4px; bottom:4px;
+  width:3px;
+  background:linear-gradient(180deg, var(--brand-light), var(--brand-dark));
+  border-radius:var(--r-full);
+  box-shadow:0 0 8px var(--brand-glow);
 }
 .topbar-title h2{font-size:18px;font-weight:600;font-family:'Bricolage Grotesque';letter-spacing:-.02em}
 .topbar-title p{font-size:12px;color:var(--text-3);margin-top:2px}
@@ -425,20 +433,27 @@ button{font-family:inherit}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)}}
 
 /* Pages */
-.page{flex:1;padding:28px;display:none}
+.page{flex:1;padding:24px 28px;display:none}
 .page.active{display:block;animation:slideUp .35s var(--ease-out)}
 @keyframes slideUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
 .section-title{
-  display:flex; align-items:baseline; gap:14px;
-  margin:32px 0 14px;
+  display:flex; align-items:center; gap:14px;
+  margin:24px 0 12px;
 }
 .section-title:first-child{margin-top:0}
 .section-title h2{
   font-size:11px; font-weight:600;
-  text-transform:uppercase; letter-spacing:.16em;
+  text-transform:uppercase; letter-spacing:.18em;
   color:var(--text-2);
   font-family:'Geist';
+  display:flex; align-items:center; gap:8px;
+}
+.section-title h2::before{
+  content:""; width:4px; height:4px;
+  background:var(--brand);
+  border-radius:50%;
+  box-shadow:0 0 6px var(--brand-glow);
 }
 .section-title .rule{flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent)}
 
@@ -453,8 +468,8 @@ button{font-family:inherit}
 .kpi{
   background:linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%);
   border:1px solid var(--border);
-  border-radius:var(--r-xl);
-  padding:18px 20px;
+  border-radius:var(--r-lg);
+  padding:14px 16px;
   position:relative;
   overflow:hidden;
   transition:all .25s var(--ease-out);
@@ -494,8 +509,8 @@ button{font-family:inherit}
 }
 .kpi .value{
   font-family:'Bricolage Grotesque';
-  font-size:32px; font-weight:600;
-  margin-top:8px;
+  font-size:26px; font-weight:600;
+  margin-top:6px;
   letter-spacing:-.04em;
   line-height:1;
   font-variant-numeric:tabular-nums;
@@ -504,10 +519,10 @@ button{font-family:inherit}
   background-clip:text;
   -webkit-text-fill-color:transparent;
 }
-.kpi .value.small{font-size:24px}
+.kpi .value.small{font-size:20px}
 .kpi .meta{
-  font-size:12px; color:var(--text-2);
-  margin-top:8px;
+  font-size:11px; color:var(--text-2);
+  margin-top:6px;
   font-family:'Geist Mono';
   font-feature-settings:"ss01";
 }
@@ -605,6 +620,11 @@ button{font-family:inherit}
   transition:all .25s var(--ease-out);
 }
 .chart-card:hover{box-shadow:var(--shadow-md);border-color:var(--border-strong)}
+.chart-card.chart-feature{
+  background:linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 60%, rgba(251,191,36,.04) 100%);
+  border-color:var(--brand-line);
+}
+.chart-card.chart-feature h3{font-size:16px;letter-spacing:-.015em}
 .chart-card h3{font-size:14px;font-weight:600;font-family:'Geist';letter-spacing:-.005em;margin-bottom:2px}
 .chart-card .desc{font-size:12px;color:var(--text-3);margin-bottom:16px}
 .chart-wrap{position:relative;height:240px}
@@ -1023,7 +1043,7 @@ footer{
         <select id="periodSelect" class="toolbar-select">
           <option value="all">Todo o período</option>
         </select>
-        <button id="refreshBtn" class="btn">↻ Atualizar</button>
+        <button id="refreshBtn" class="btn btn-ghost" title="Atualizar dados">↻</button>
       </div>
     </header>
 
@@ -1039,6 +1059,7 @@ footer{
 
       <div class="section-title"><h2>Alertas operacionais</h2><span class="rule"></span></div>
       <div class="insight-grid">
+        <div class="insight success" id="insightAllOk" style="display:none"><div class="insight-icon">✓</div><div class="insight-body"><div class="insight-title">Tudo em ordem</div><div class="insight-desc">Nenhum alerta no momento</div></div></div>
         <div class="insight alert" id="insightAging" style="display:none"><div class="insight-icon">⏱</div><div class="insight-body"><div class="insight-title">Parados há +3 dias</div><div class="insight-desc">A fazer ou em processo</div><span class="insight-count" id="agingCount">0</span></div></div>
         <div class="insight info" id="insightWaiting" style="display:none"><div class="insight-icon">📱</div><div class="insight-body"><div class="insight-title">Aguardando retirada</div><div class="insight-desc">Avisar cliente via WhatsApp</div><span class="insight-count" id="waitingCount">0</span></div></div>
         <div class="insight warn" id="insightBlocked" style="display:none"><div class="insight-icon">⊘</div><div class="insight-body"><div class="insight-title">Bloqueados</div><div class="insight-desc">Precisam de ação</div><span class="insight-count" id="blockedCount">0</span></div></div>
@@ -1047,9 +1068,9 @@ footer{
 
       <div class="section-title"><h2>Análise visual</h2><span class="rule"></span></div>
       <div class="charts-grid">
-        <div class="chart-card col-4"><h3>Situação atual</h3><div class="desc">Por status</div><div class="chart-wrap"><canvas id="chartStatus"></canvas></div></div>
-        <div class="chart-card col-4"><h3>Categoria</h3><div class="desc">Origem do aparelho</div><div class="chart-wrap"><canvas id="chartCategory"></canvas></div></div>
-        <div class="chart-card col-4"><h3>Onde está</h3><div class="desc">Localização</div><div class="chart-wrap"><canvas id="chartLocation"></canvas></div></div>
+        <div class="chart-card col-6 chart-feature"><h3>Situação atual</h3><div class="desc">Distribuição por status</div><div class="chart-wrap tall"><canvas id="chartStatus"></canvas></div></div>
+        <div class="chart-card col-3"><h3>Categoria</h3><div class="desc">Origem</div><div class="chart-wrap tall"><canvas id="chartCategory"></canvas></div></div>
+        <div class="chart-card col-3"><h3>Onde está</h3><div class="desc">Localização</div><div class="chart-wrap tall"><canvas id="chartLocation"></canvas></div></div>
         <div class="chart-card col-8"><h3>Aparelhos por dia</h3><div class="desc">Entradas e saídas</div><div class="chart-wrap tall"><canvas id="chartDaily"></canvas></div></div>
         <div class="chart-card col-4"><h3>Tempo médio por categoria</h3><div class="desc">Dias de reparo</div><div class="chart-wrap tall"><canvas id="chartTimeByCat"></canvas></div></div>
         <div class="chart-card col-6"><h3>Modelos mais frequentes</h3><div class="desc">Top 10</div><div class="chart-wrap tall"><canvas id="chartModels"></canvas></div></div>
@@ -1802,6 +1823,9 @@ function renderInsights() {
   toggleInsight('insightWaiting','waitingCount',waitingLong);
   toggleInsight('insightBlocked','blockedCount',blocked);
   toggleInsight('insightDuplicate','dupCount',dup);
+  // Tudo ok
+  const totalAlerts = aging + waitingLong + blocked + dup;
+  document.getElementById('insightAllOk').style.display = totalAlerts === 0 ? 'flex' : 'none';
 }
 function toggleInsight(card, count, n) { document.getElementById(card).style.display = n>0?'flex':'none'; document.getElementById(count).textContent = fmtInt(n); }
 
