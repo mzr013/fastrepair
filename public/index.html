@@ -819,6 +819,8 @@ tbody tr.fresh td{
 .tag.s-fazer{background:rgba(96,165,250,.10);color:var(--info);border-color:rgba(96,165,250,.25)}
 .tag.s-verificar{background:rgba(167,139,250,.10);color:var(--violet);border-color:rgba(167,139,250,.25)}
 .tag.s-bloqueado{background:rgba(251,113,133,.12);color:var(--danger);border-color:rgba(251,113,133,.28)}
+.tag.return{background:rgba(251,113,133,.14);color:var(--danger);border-color:rgba(251,113,133,.32);font-weight:600;animation:pulse 2s ease-in-out infinite}
+.tag.no-return{background:var(--success-soft);color:var(--success);border-color:var(--success-line)}
 .tag.cat-estoque{background:rgba(96,165,250,.08);color:var(--info);border-color:rgba(96,165,250,.2)}
 .tag.cat-garantia{background:rgba(251,113,133,.08);color:var(--danger);border-color:rgba(251,113,133,.2)}
 .tag.cat-servico{background:rgba(52,211,153,.08);color:var(--success);border-color:rgba(52,211,153,.2)}
@@ -874,6 +876,8 @@ tbody tr.fresh td{
 .quick-btn.ready:hover{background:rgba(52,211,153,.08);border-color:var(--success)}
 .quick-btn.wpp{color:#25d366;border-color:rgba(37,211,102,.28)}
 .quick-btn.wpp:hover{background:rgba(37,211,102,.1);border-color:#25d366;box-shadow:0 0 0 2px rgba(37,211,102,.15)}
+.quick-btn.nota{color:var(--brand);border-color:var(--brand-line)}
+.quick-btn.nota:hover{background:var(--brand-soft);border-color:var(--brand);box-shadow:0 0 0 2px var(--brand-soft)}
 .quick-btn.del{color:var(--danger);border-color:rgba(251,113,133,.22)}
 .quick-btn.del:hover{background:rgba(251,113,133,.06);border-color:var(--danger)}
 
@@ -1208,6 +1212,7 @@ footer{
       <div class="nav-item active" data-page="dashboard"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg></span> Dashboard</div>
       <div class="nav-item" data-page="aparelhos"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2.5"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></span> Aparelhos <span class="badge mono" id="navBadgeAparelhos">0</span></div>
       <div class="nav-item" data-page="clientes"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span> Clientes <span class="badge mono" id="navBadgeClientes">0</span></div>
+      <div class="nav-item" data-page="historico"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg></span> Histórico <span class="badge mono" id="navBadgeHist">0</span></div>
       <div class="nav-item" data-page="logs" id="navLogs" style="display:none"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span> Logs</div>
       <div class="nav-section">Ações rápidas</div>
       <div class="nav-item" id="navNew"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span> Novo aparelho</div>
@@ -1356,6 +1361,50 @@ footer{
       </div>
     </div>
 
+    <!-- HISTÓRICO -->
+    <div id="page-historico" class="page">
+      <div style="display:flex; gap:10px; margin-bottom:14px; align-items:center; flex-wrap:wrap">
+        <select id="histMonth" class="toolbar-select"><option value="all">Todos os meses</option></select>
+        <select id="histReturn" class="toolbar-select">
+          <option value="">Todos</option>
+          <option value="returns">Só retornos</option>
+          <option value="unique">Sem retorno</option>
+        </select>
+        <span style="flex:1"></span>
+        <span class="loading" id="histCount"></span>
+      </div>
+      <div class="kpi-grid" style="margin-bottom:18px">
+        <div class="kpi"><div class="label">Concluídos no período</div><div class="value mono" id="histKpiTotal">—</div><div class="meta" id="histKpiTotalMeta">aparelhos finalizados</div></div>
+        <div class="kpi pending"><div class="label">Retornos</div><div class="value mono" id="histKpiReturns">—</div><div class="meta" id="histKpiReturnsMeta">mesmo IMEI/cliente</div></div>
+        <div class="kpi ready"><div class="label">Tempo médio</div><div class="value mono small" id="histKpiAvg">—</div><div class="meta">de reparo</div></div>
+        <div class="kpi waiting"><div class="label">Top reparo</div><div class="value mono small" id="histKpiTop">—</div><div class="meta" id="histKpiTopMeta">categoria mais comum</div></div>
+      </div>
+      <div class="table-card">
+        <div class="table-toolbar">
+          <input id="searchHist" class="search-input" placeholder="Buscar modelo, IMEI, cliente, reparo…">
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Mês</th>
+                <th>Saída</th>
+                <th>Modelo</th>
+                <th>Cliente / IMEI</th>
+                <th>O que fez</th>
+                <th style="text-align:right">Dias</th>
+                <th>Retorno?</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="histBody">
+              <tr><td colspan="8" class="empty"><div class="loading"><span class="spinner"></span> Carregando…</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <!-- LOGS -->
     <div id="page-logs" class="page">
       <div style="display:flex; gap:10px; margin-bottom:16px; align-items:center; flex-wrap:wrap">
@@ -1422,6 +1471,7 @@ footer{
     <div class="modal-body" id="detailBody"></div>
     <div class="modal-foot">
       <button class="btn" data-close>Fechar</button>
+      <button class="btn" id="btnDetailNota" style="display:none">📄 Gerar Nota</button>
       <button class="btn btn-primary" id="btnDetailEdit">Editar</button>
     </div>
   </div>
@@ -1468,6 +1518,23 @@ footer{
           <div class="field full"><label>O que fazer</label><input type="text" id="fOqueFazer" placeholder="Trocar tela e bateria…"></div>
           <div class="field full"><label>O que fez</label><input type="text" id="fOqueFez" placeholder="(preencher quando concluir)"></div>
           <div class="field full"><label>Observação</label><input type="text" id="fObs" placeholder="Detalhes adicionais"></div>
+        </div>
+
+        <div class="form-section-title">Financeiro</div>
+        <div class="form-grid" style="margin-bottom:16px">
+          <div class="field"><label>Valor do serviço (R$)</label><input type="number" id="fValorServico" step="0.01" min="0" placeholder="0,00"></div>
+          <div class="field"><label>Valor das peças (R$)</label><input type="number" id="fValorPecas" step="0.01" min="0" placeholder="0,00"></div>
+          <div class="field full"><label>Peças usadas</label><input type="text" id="fPecasUsadas" placeholder="Tela original, bateria 100%…"></div>
+          <div class="field full"><label>Forma de pagamento</label>
+            <select id="fFormaPgto">
+              <option value="">— selecione —</option>
+              <option value="Dinheiro">Dinheiro</option>
+              <option value="Pix">Pix</option>
+              <option value="Cartão de Crédito">Cartão de Crédito</option>
+              <option value="Cartão de Débito">Cartão de Débito</option>
+              <option value="Pendente">Pendente</option>
+            </select>
+          </div>
         </div>
 
         <div class="form-section-title">Datas</div>
@@ -1707,12 +1774,17 @@ const dbToRow = r => ({
   oqueFazer: r.oque_fazer || '', obs: r.observacao || '', oqueFez: r.oque_fez || '',
   dataChegou: r.data_chegou || null, dataSaida: r.data_saida || null, prazo: r.prazo || null,
   clienteId: r.cliente_id || null,
-  cliente: r.clientes || null,  // join expandido
+  cliente: r.clientes || null,
   clienteNome: r.clientes?.nome || '',
+  valorServico: r.valor_servico != null ? +r.valor_servico : null,
+  valorPecas: r.valor_pecas != null ? +r.valor_pecas : null,
+  pecasUsadas: r.pecas_usadas || '',
+  formaPagamento: r.forma_pagamento || '',
+  numeroOs: r.numero_os || null,
   _dataChegou: isoToDate(r.data_chegou), _dataSaida: isoToDate(r.data_saida), _prazo: isoToDate(r.prazo),
   dias: r.data_chegou && r.data_saida ? daysBetween(isoToDate(r.data_chegou), isoToDate(r.data_saida)) : null,
   diasEmAberto: r.data_chegou && !r.data_saida ? daysBetween(isoToDate(r.data_chegou), todayMidnight()) : null,
-  diasProntoSemSaida: null, // calculado depois
+  diasProntoSemSaida: null,
   noPrazo: r.data_saida && r.prazo ? (isoToDate(r.data_saida) <= isoToDate(r.prazo)) : null,
 });
 const rowToDb = (data, userId) => {
@@ -1730,6 +1802,10 @@ const rowToDb = (data, userId) => {
   if (data.dataSaida !== undefined) out.data_saida = data.dataSaida || null;
   if (data.prazo !== undefined) out.prazo = data.prazo || null;
   if (data.clienteId !== undefined) out.cliente_id = data.clienteId || null;
+  if (data.valorServico !== undefined) out.valor_servico = data.valorServico === '' || data.valorServico == null ? null : Number(data.valorServico);
+  if (data.valorPecas !== undefined) out.valor_pecas = data.valorPecas === '' || data.valorPecas == null ? null : Number(data.valorPecas);
+  if (data.pecasUsadas !== undefined) out.pecas_usadas = String(data.pecasUsadas||'').trim();
+  if (data.formaPagamento !== undefined) out.forma_pagamento = data.formaPagamento || null;
   if (userId) out.updated_by = userId;
   return out;
 };
@@ -1914,8 +1990,127 @@ function subscribeRealtime() {
 }
 
 /* ============================================================
-   LOGS (admin only)
+   HISTÓRICO DE REPAROS
    ============================================================ */
+function renderHistorico() {
+  // Pegar todos os concluídos (com data_saida ou status PRONTO)
+  const concluidos = STATE.rows.filter(r => isReady(r) || r._dataSaida);
+
+  // Detectar retornos: mesmo IMEI ou mesmo cliente_id aparecendo mais de 1x
+  const imeiCount = new Map();
+  const clienteCount = new Map();
+  for (const r of concluidos) {
+    const imei = (r.imei||'').replace(/\s+/g,'').trim();
+    if (isRealImei(imei)) imeiCount.set(imei, (imeiCount.get(imei)||0)+1);
+    if (r.clienteId) clienteCount.set(r.clienteId, (clienteCount.get(r.clienteId)||0)+1);
+  }
+  const isReturn = (r) => {
+    const imei = (r.imei||'').replace(/\s+/g,'').trim();
+    if (isRealImei(imei) && (imeiCount.get(imei)||0) > 1) return true;
+    if (r.clienteId && (clienteCount.get(r.clienteId)||0) > 1) return true;
+    return false;
+  };
+
+  // Popular filtro de meses
+  const months = new Map();
+  for (const r of concluidos) {
+    const dt = r._dataSaida || r._dataChegou;
+    if (!dt) continue;
+    const k = ymKey(dt);
+    months.set(k, (months.get(k)||0)+1);
+  }
+  const monthSel = document.getElementById('histMonth');
+  const curMonth = monthSel.value;
+  monthSel.innerHTML = '<option value="all">Todos os meses</option>';
+  [...months.keys()].sort().reverse().forEach(k => {
+    const o = document.createElement('option'); o.value = k;
+    o.textContent = `${ymLabel(k)} · ${months.get(k)}`;
+    monthSel.appendChild(o);
+  });
+  if (curMonth) monthSel.value = curMonth;
+
+  // Filtros
+  const fMonth = monthSel.value;
+  const fReturn = document.getElementById('histReturn').value;
+  const q = norm(document.getElementById('searchHist').value);
+
+  const list = concluidos.filter(r => {
+    if (fMonth && fMonth !== 'all') {
+      const dt = r._dataSaida || r._dataChegou;
+      if (!dt || ymKey(dt) !== fMonth) return false;
+    }
+    if (fReturn === 'returns' && !isReturn(r)) return false;
+    if (fReturn === 'unique' && isReturn(r)) return false;
+    if (q) {
+      const blob = norm([r.modelo,r.cor,r.imei,r.oqueFazer,r.oqueFez,r.clienteNome].join(' '));
+      if (!blob.includes(q)) return false;
+    }
+    return true;
+  }).sort((a,b) => {
+    const ad = (a._dataSaida || a._dataChegou)?.getTime() || 0;
+    const bd = (b._dataSaida || b._dataChegou)?.getTime() || 0;
+    return bd - ad;
+  });
+
+  // KPIs do histórico
+  const total = list.length;
+  const returns = list.filter(isReturn).length;
+  const completed = list.filter(r => r.dias != null && r.dias >= 0);
+  const avg = completed.length ? completed.reduce((s,r)=>s+r.dias,0)/completed.length : null;
+  const catCount = new Map();
+  for (const r of list) { if (r.categoria) catCount.set(r.categoria, (catCount.get(r.categoria)||0)+1); }
+  const topCat = [...catCount.entries()].sort((a,b)=>b[1]-a[1])[0];
+
+  document.getElementById('histKpiTotal').textContent = fmtInt(total);
+  document.getElementById('histKpiTotalMeta').textContent = fMonth==='all' ? 'todo o período' : ymLabel(fMonth);
+  document.getElementById('histKpiReturns').textContent = fmtInt(returns);
+  document.getElementById('histKpiReturnsMeta').textContent = total ? `${Math.round(returns/total*100)}% do total` : '—';
+  document.getElementById('histKpiAvg').textContent = avg==null?'—':fmtDays(avg);
+  document.getElementById('histKpiTop').textContent = topCat ? topCat[0] : '—';
+  document.getElementById('histKpiTopMeta').textContent = topCat ? `${topCat[1]} reparos` : '—';
+  document.getElementById('histCount').textContent = `${fmtInt(list.length)} registros`;
+  document.getElementById('navBadgeHist').textContent = fmtInt(concluidos.length);
+
+  // Tabela
+  const body = document.getElementById('histBody');
+  if (!list.length) {
+    body.innerHTML = `<tr><td colspan="8" class="empty"><h3>Nenhum reparo no período</h3><p>Quando aparelhos forem marcados como PRONTO, aparecem aqui.</p></td></tr>`;
+    return;
+  }
+
+  // Agrupar por mês (sticky-like — primeiro registro de cada mês mostra o badge do mês)
+  let lastMonth = null;
+  body.innerHTML = list.map(r => {
+    const dt = r._dataSaida || r._dataChegou;
+    const monthKey = dt ? ymKey(dt) : null;
+    const showMonth = monthKey !== lastMonth;
+    lastMonth = monthKey;
+    const monthCell = showMonth && monthKey ? `<strong style="color:var(--text-1);font-size:12px">${ymLabel(monthKey).split(' ')[0]}</strong><br><span class="mono muted" style="font-size:10px">${monthKey.split('-')[0]}</span>` : '<span class="muted">—</span>';
+    const ret = isReturn(r);
+    const retCell = ret ? `<span class="tag return" title="Aparelho voltou">↻ Retorno</span>` : `<span class="tag no-return">✓ OK</span>`;
+    let diasCell = r.dias != null ? `<span class="${r.dias<=2?'days-pos':r.dias<=5?'days-warn':'days-late'}">${r.dias.toFixed(1).replace('.',',')}</span>` : '<span class="muted">—</span>';
+
+    let clienteCell;
+    if (r.cliente) {
+      clienteCell = `<div class="cliente-cell"><span class="name">${escapeHtml(r.cliente.nome)}</span>${r.imei?`<span class="imei">${escapeHtml(r.imei)}</span>`:''}</div>`;
+    } else {
+      clienteCell = `<div class="cliente-cell"><span class="no-client">sem cliente</span>${r.imei?`<span class="imei">${escapeHtml(r.imei)}</span>`:'<span class="imei muted">sem IMEI</span>'}</div>`;
+    }
+
+    return `<tr ${ret?'class="late"':''}>
+      <td>${monthCell}</td>
+      <td class="mono">${dt ? isoToBR(dt.toISOString()) : '—'}</td>
+      <td><strong>${escapeHtml(r.modelo)}</strong> <span class="muted" style="font-size:11px">${escapeHtml(r.cor||'')}</span></td>
+      <td>${clienteCell}</td>
+      <td style="max-width:240px"><span style="font-size:12.5px">${escapeHtml(r.oqueFez || r.oqueFazer || '')||'<span class="muted">—</span>'}</span></td>
+      <td class="mono" style="text-align:right">${diasCell}</td>
+      <td>${retCell}</td>
+      <td><button class="quick-btn" data-hist-detail="${r.id}" title="Ver detalhes">👁</button></td>
+    </tr>`;
+  }).join('');
+}
+
+
 async function loadLogs() {
   if (!isAdmin()) return;
   const body = document.getElementById('logsBody');
@@ -1990,6 +2185,10 @@ async function openDetail(id) {
       <dt>Saída</dt><dd class="mono">${isoToBR(r.dataSaida)||'<span class="muted">em aberto</span>'}</dd>
       <dt>Prazo</dt><dd class="mono">${isoToBR(r.prazo)||'—'}</dd>
       <dt>Dias</dt><dd class="mono">${r.dias!=null?r.dias.toFixed(1).replace('.',',')+' d':r.diasEmAberto!=null?'↻ '+Math.floor(r.diasEmAberto)+' d em aberto':'—'}</dd>
+      ${r.numeroOs?`<dt>Nº OS</dt><dd class="mono"><strong>${r.numeroOs}</strong></dd>`:''}
+      ${(r.valorServico!=null||r.valorPecas!=null)?`<dt>Valores</dt><dd>Serviço: <strong>${fmtBRL(r.valorServico||0)}</strong> · Peças: <strong>${fmtBRL(r.valorPecas||0)}</strong> · Total: <strong style="color:var(--brand)">${fmtBRL((+r.valorServico||0)+(+r.valorPecas||0))}</strong></dd>`:''}
+      ${r.formaPagamento?`<dt>Pagamento</dt><dd>${escapeHtml(r.formaPagamento)}</dd>`:''}
+      ${r.pecasUsadas?`<dt>Peças usadas</dt><dd>${escapeHtml(r.pecasUsadas)}</dd>`:''}
     </dl>
   `;
   // Timeline
@@ -2015,6 +2214,14 @@ async function openDetail(id) {
     document.getElementById('modalDetail').classList.remove('open');
     setTimeout(() => openForm(id), 200);
   };
+  // Botão nota só se PRONTO
+  const btnNota = document.getElementById('btnDetailNota');
+  if (norm(r.situacao).includes('pronto')) {
+    btnNota.style.display = 'inline-flex';
+    btnNota.onclick = () => generateNota(id);
+  } else {
+    btnNota.style.display = 'none';
+  }
   document.getElementById('modalDetail').classList.add('open');
 }
 window.openDetail = openDetail;
@@ -2073,6 +2280,7 @@ function applyAndRender() {
   if (STATE.currentPage==='dashboard') { updateGreeting(); renderKPIs(); renderInsights(); renderCharts(); }
   else if (STATE.currentPage==='aparelhos') renderTable();
   else if (STATE.currentPage==='clientes') renderClientes();
+  else if (STATE.currentPage==='historico') renderHistorico();
   updateNavBadges();
 }
 function updateNavBadges() {
@@ -2243,6 +2451,10 @@ function renderTable() {
     if (r.cliente?.telefone && (sNorm.includes('pronto') || sNorm.includes('processo'))) {
       qa += `<button class="quick-btn wpp" data-action="wpp" data-id="${r.id}" title="Avisar no WhatsApp">📱</button>`;
     }
+    // Botão Nota se PRONTO
+    if (sNorm.includes('pronto')) {
+      qa += `<button class="quick-btn nota" data-action="nota" data-id="${r.id}" title="Gerar nota de reparo">📄</button>`;
+    }
     qa += `<button class="quick-btn" data-action="edit" data-id="${r.id}" title="Editar">✏</button>`;
     qa += `<button class="quick-btn del" data-action="delete" data-id="${r.id}" title="Excluir">🗑</button>`;
 
@@ -2407,6 +2619,10 @@ function openForm(id = null) {
     document.getElementById('fPrazo').value = r.prazo || '';
     document.getElementById('fClienteSearch').value = r.cliente?.nome || '';
     document.getElementById('fClienteId').value = r.clienteId || '';
+    document.getElementById('fValorServico').value = r.valorServico ?? '';
+    document.getElementById('fValorPecas').value = r.valorPecas ?? '';
+    document.getElementById('fPecasUsadas').value = r.pecasUsadas || '';
+    document.getElementById('fFormaPgto').value = r.formaPagamento || '';
   } else {
     title.textContent = 'Novo aparelho';
     document.getElementById('formId').value = '';
@@ -2438,6 +2654,10 @@ async function saveForm() {
     dataSaida: document.getElementById('fDataSaida').value || null,
     prazo: document.getElementById('fPrazo').value || null,
     clienteId: document.getElementById('fClienteId').value ? parseInt(document.getElementById('fClienteId').value) : null,
+    valorServico: document.getElementById('fValorServico').value || null,
+    valorPecas: document.getElementById('fValorPecas').value || null,
+    pecasUsadas: document.getElementById('fPecasUsadas').value.trim(),
+    formaPagamento: document.getElementById('fFormaPgto').value || null,
   };
   if (!formData.modelo) { toast('Modelo é obrigatório', 'err'); return; }
   const btn = document.getElementById('btnSaveAparelho');
@@ -2521,8 +2741,410 @@ function openWhatsApp(r) {
 }
 
 /* ============================================================
-   QUICK ACTIONS
+   NOTA DE REPARO (imprimível)
    ============================================================ */
+const LOJA = {
+  nome: 'Meu iPhone Dos Sonhos',
+  endereco: 'Rua Benjamin Constant, 61 — Sala 2515',
+  garantia: '1 ano',
+};
+
+function fmtBRL(v) {
+  if (v == null || v === '' || isNaN(v)) return 'R$ 0,00';
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(+v);
+}
+
+function generateNota(id) {
+  const r = STATE.rows.find(x => x.id === id);
+  if (!r) return toast('Aparelho não encontrado', 'err');
+
+  const valorServico = +r.valorServico || 0;
+  const valorPecas = +r.valorPecas || 0;
+  const total = valorServico + valorPecas;
+  const numeroOs = r.numeroOs || `#${String(r.id).padStart(4,'0')}`;
+
+  const html = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Ordem de Serviço Nº ${numeroOs} — ${LOJA.nome}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --gold:#d4a426;
+    --gold-dark:#a47e15;
+    --gold-soft:#fef9e7;
+    --gold-line:#f3e4a8;
+    --ink:#0f0f10;
+    --text:#1f1f23;
+    --text-2:#5a5a63;
+    --text-3:#8a8a93;
+    --text-4:#b8b8be;
+    --line:#e8e8ec;
+    --line-2:#f0f0f3;
+    --bg:#fafaf9;
+    --paper:#ffffff;
+  }
+  html,body{font-family:'Inter',sans-serif;color:var(--text);background:var(--bg);line-height:1.5;font-feature-settings:"ss01","cv11"}
+  body{padding:32px 20px}
+
+  .actions{max-width:820px;margin:0 auto 16px;display:flex;gap:8px;justify-content:flex-end}
+  .actions button{
+    background:var(--ink);color:#fff;border:none;
+    padding:10px 18px;border-radius:8px;
+    font-family:inherit;font-size:13px;font-weight:600;
+    cursor:pointer;letter-spacing:-.005em;
+    transition:transform .1s, box-shadow .15s;
+    box-shadow:0 1px 2px rgba(0,0,0,.06), 0 0 0 1px rgba(0,0,0,.04);
+  }
+  .actions button:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.1)}
+  .actions button.secondary{background:var(--paper);color:var(--text-2);border:1px solid var(--line)}
+  .actions button.primary{background:var(--gold);color:var(--ink)}
+  .actions button.primary:hover{background:var(--gold-dark);color:#fff}
+
+  .nota{
+    max-width:820px;margin:0 auto;
+    background:var(--paper);
+    box-shadow:0 1px 2px rgba(0,0,0,.04), 0 12px 40px -12px rgba(0,0,0,.12);
+    border-radius:12px;
+    overflow:hidden;
+    position:relative;
+  }
+
+  /* Top accent bar */
+  .top-bar{height:6px;background:linear-gradient(90deg, var(--gold) 0%, var(--gold-dark) 50%, var(--gold) 100%)}
+
+  /* HEADER */
+  .header{
+    display:grid;grid-template-columns:1fr auto;
+    gap:32px;
+    padding:36px 44px 28px;
+    border-bottom:1px solid var(--line);
+    position:relative;
+  }
+  .brand{display:flex;align-items:center;gap:14px}
+  .brand-logo{
+    width:52px;height:52px;
+    background:linear-gradient(135deg, var(--ink) 0%, #2a2a30 100%);
+    border-radius:14px;display:grid;place-items:center;color:var(--gold);
+    box-shadow:0 4px 12px rgba(0,0,0,.15), inset 0 1px 0 rgba(255,255,255,.08);
+    flex-shrink:0;
+  }
+  .brand-logo svg{width:28px;height:28px}
+  .brand-info h1{
+    font-size:18px;font-weight:700;
+    letter-spacing:-.02em;color:var(--ink);
+    line-height:1.1;
+  }
+  .brand-info .sub{font-size:11px;color:var(--text-3);margin-top:3px;font-weight:500;text-transform:uppercase;letter-spacing:.08em}
+  .brand-info .addr{font-size:12px;color:var(--text-2);margin-top:8px;line-height:1.5}
+
+  .os-badge{text-align:right}
+  .os-badge .label{
+    font-size:9px;font-weight:600;
+    text-transform:uppercase;letter-spacing:.18em;
+    color:var(--text-3);
+  }
+  .os-badge .num{
+    font-family:'JetBrains Mono',monospace;
+    font-size:24px;font-weight:700;
+    color:var(--ink);margin-top:4px;
+    letter-spacing:-.02em;
+  }
+  .os-badge .num span{color:var(--gold)}
+  .os-badge .meta{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;color:var(--text-3);
+    margin-top:4px;
+  }
+
+  /* BODY */
+  .body{padding:24px 44px 32px}
+
+  /* Section */
+  .section{margin-top:24px}
+  .section:first-child{margin-top:0}
+  .section-head{
+    display:flex;align-items:center;gap:10px;
+    margin-bottom:10px;
+  }
+  .section-head h2{
+    font-size:10px;font-weight:700;
+    text-transform:uppercase;letter-spacing:.16em;
+    color:var(--text-2);
+  }
+  .section-head .dot{width:4px;height:4px;border-radius:50%;background:var(--gold)}
+  .section-head .line{flex:1;height:1px;background:var(--line)}
+
+  /* Info grid */
+  .info-grid{
+    display:grid;grid-template-columns:repeat(2,1fr);
+    gap:14px 32px;
+  }
+  .info-grid.three{grid-template-columns:repeat(3,1fr)}
+  .info-grid .full{grid-column:1/-1}
+  .info-item{display:flex;flex-direction:column;gap:3px}
+  .info-item dt{
+    font-size:10px;font-weight:600;
+    text-transform:uppercase;letter-spacing:.08em;
+    color:var(--text-3);
+  }
+  .info-item dd{font-size:14px;color:var(--text);font-weight:500}
+  .info-item dd.mono{font-family:'JetBrains Mono',monospace;font-size:13px}
+  .info-item dd.muted{color:var(--text-3);font-weight:400;font-style:italic}
+
+  /* Description box */
+  .desc-box{
+    background:var(--gold-soft);
+    border:1px solid var(--gold-line);
+    border-radius:8px;
+    padding:14px 16px;
+    font-size:13.5px;color:var(--text);
+    line-height:1.6;
+    min-height:48px;
+    position:relative;
+  }
+  .desc-box.neutral{
+    background:var(--bg);
+    border-color:var(--line);
+  }
+
+  /* Valores table */
+  .valores{
+    background:var(--bg);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:16px 20px;
+  }
+  .valores .row{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:8px 0;
+    font-size:14px;
+    border-bottom:1px dashed var(--line-2);
+  }
+  .valores .row:last-of-type{border-bottom:none}
+  .valores .row .lbl{color:var(--text-2)}
+  .valores .row .val{
+    font-family:'JetBrains Mono',monospace;
+    font-weight:500;color:var(--text);
+    font-feature-settings:"tnum";
+  }
+  .valores .row.total{
+    border-top:2px solid var(--ink);
+    border-bottom:none;
+    margin-top:6px;padding-top:14px;
+  }
+  .valores .row.total .lbl{
+    font-size:12px;font-weight:700;
+    text-transform:uppercase;letter-spacing:.1em;color:var(--ink);
+  }
+  .valores .row.total .val{
+    font-size:22px;font-weight:700;color:var(--gold-dark);
+    letter-spacing:-.01em;
+  }
+  .pgto-row{
+    display:flex;align-items:center;gap:10px;
+    margin-top:14px;
+    padding-top:14px;
+    border-top:1px solid var(--line);
+  }
+  .pgto-row .lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--text-3)}
+  .pgto-tag{
+    display:inline-flex;align-items:center;gap:5px;
+    padding:5px 11px;
+    background:var(--ink);color:#fff;
+    border-radius:5px;
+    font-size:12px;font-weight:600;
+  }
+  .pgto-tag::before{
+    content:"";width:6px;height:6px;border-radius:50%;
+    background:var(--gold);
+  }
+
+  /* Garantia */
+  .garantia{
+    margin-top:24px;
+    padding:18px 22px;
+    background:linear-gradient(135deg, var(--gold-soft) 0%, #fef3d3 100%);
+    border:1px solid var(--gold-line);
+    border-left:4px solid var(--gold);
+    border-radius:8px;
+    position:relative;
+  }
+  .garantia .title{
+    display:flex;align-items:center;gap:8px;
+    font-size:11px;font-weight:700;
+    text-transform:uppercase;letter-spacing:.12em;
+    color:var(--gold-dark);
+    margin-bottom:8px;
+  }
+  .garantia .title svg{width:14px;height:14px}
+  .garantia p{font-size:12px;color:#5a4513;line-height:1.6}
+
+  /* Assinaturas */
+  .assinaturas{
+    display:grid;grid-template-columns:1fr 1fr;
+    gap:48px;
+    margin-top:48px;
+  }
+  .ass{display:flex;flex-direction:column;align-items:center;gap:6px}
+  .ass-line{
+    width:100%;height:1px;background:var(--text-2);
+  }
+  .ass-label{
+    font-size:10px;font-weight:600;
+    text-transform:uppercase;letter-spacing:.12em;
+    color:var(--text-2);
+  }
+  .ass-name{font-size:12px;color:var(--text-2);margin-top:2px}
+
+  /* Footer */
+  .footer{
+    margin-top:36px;padding:20px 0 0;
+    border-top:1px dashed var(--line);
+    text-align:center;
+  }
+  .footer .name{font-size:12px;font-weight:600;color:var(--text-2)}
+  .footer .addr{font-size:11px;color:var(--text-3);margin-top:3px}
+  .footer .legal{
+    font-family:'JetBrains Mono',monospace;
+    font-size:9px;color:var(--text-4);
+    margin-top:8px;text-transform:uppercase;letter-spacing:.1em;
+  }
+
+  /* Print */
+  @media print{
+    @page{margin:14mm 12mm;size:A4}
+    body{background:#fff;padding:0}
+    .nota{box-shadow:none;border-radius:0;max-width:100%}
+    .actions{display:none}
+    .header{padding:20px 30px 18px}
+    .body{padding:18px 30px 24px}
+  }
+</style>
+</head>
+<body>
+<div class="actions">
+  <button class="secondary" onclick="window.close()">Fechar</button>
+  <button class="primary" onclick="window.print()">🖨 Imprimir / Salvar PDF</button>
+</div>
+
+<div class="nota">
+  <div class="top-bar"></div>
+
+  <div class="header">
+    <div class="brand">
+      <div class="brand-logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
+      </div>
+      <div class="brand-info">
+        <h1>${LOJA.nome}</h1>
+        <div class="sub">Assistência Técnica · Apple</div>
+        <div class="addr">${LOJA.endereco}</div>
+      </div>
+    </div>
+    <div class="os-badge">
+      <div class="label">Ordem de Serviço</div>
+      <div class="num">Nº <span>${numeroOs}</span></div>
+      <div class="meta">${new Date().toLocaleDateString('pt-BR')} · ${new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>
+    </div>
+  </div>
+
+  <div class="body">
+    <div class="section">
+      <div class="section-head"><span class="dot"></span><h2>Cliente</h2><span class="line"></span></div>
+      <dl class="info-grid">
+        <div class="info-item"><dt>Nome completo</dt><dd${r.cliente?.nome?'':' class="muted"'}>${escapeHtml(r.cliente?.nome || 'Não informado')}</dd></div>
+        <div class="info-item"><dt>Telefone / WhatsApp</dt><dd class="${r.cliente?.telefone?'mono':'muted'}">${r.cliente?.telefone ? escapeHtml(phoneMask(r.cliente.telefone)) : 'Não informado'}</dd></div>
+      </dl>
+    </div>
+
+    <div class="section">
+      <div class="section-head"><span class="dot"></span><h2>Aparelho</h2><span class="line"></span></div>
+      <dl class="info-grid three">
+        <div class="info-item"><dt>Modelo</dt><dd>${escapeHtml(r.modelo)}</dd></div>
+        <div class="info-item"><dt>Cor</dt><dd${r.cor?'':' class="muted"'}>${escapeHtml(r.cor || '—')}</dd></div>
+        <div class="info-item"><dt>IMEI / Serial</dt><dd class="${isRealImei((r.imei||'').replace(/\s+/g,''))?'mono':'muted'}">${escapeHtml(r.imei || 'Não informado')}</dd></div>
+        <div class="info-item"><dt>Data de entrada</dt><dd class="mono">${isoToBR(r.dataChegou) || '—'}</dd></div>
+        <div class="info-item"><dt>Data de saída</dt><dd class="mono">${isoToBR(r.dataSaida) || new Date().toLocaleDateString('pt-BR')}</dd></div>
+        <div class="info-item"><dt>Tempo de reparo</dt><dd class="mono">${r.dias!=null?r.dias.toFixed(1).replace('.',',')+' dias':'—'}</dd></div>
+      </dl>
+    </div>
+
+    <div class="section">
+      <div class="section-head"><span class="dot"></span><h2>Defeito relatado pelo cliente</h2><span class="line"></span></div>
+      <div class="desc-box">${escapeHtml(r.oqueFazer || 'Não informado')}</div>
+    </div>
+
+    <div class="section">
+      <div class="section-head"><span class="dot"></span><h2>Serviço executado</h2><span class="line"></span></div>
+      <div class="desc-box">${escapeHtml(r.oqueFez || r.oqueFazer || 'Conforme solicitado')}</div>
+    </div>
+
+    ${r.pecasUsadas ? `
+    <div class="section">
+      <div class="section-head"><span class="dot"></span><h2>Peças utilizadas</h2><span class="line"></span></div>
+      <div class="desc-box neutral">${escapeHtml(r.pecasUsadas)}</div>
+    </div>` : ''}
+
+    ${r.obs ? `
+    <div class="section">
+      <div class="section-head"><span class="dot"></span><h2>Observações</h2><span class="line"></span></div>
+      <div class="desc-box neutral">${escapeHtml(r.obs)}</div>
+    </div>` : ''}
+
+    <div class="section">
+      <div class="section-head"><span class="dot"></span><h2>Valores</h2><span class="line"></span></div>
+      <div class="valores">
+        <div class="row"><span class="lbl">Mão de obra</span><span class="val">${fmtBRL(valorServico)}</span></div>
+        <div class="row"><span class="lbl">Peças e materiais</span><span class="val">${fmtBRL(valorPecas)}</span></div>
+        <div class="row total"><span class="lbl">Valor total</span><span class="val">${fmtBRL(total)}</span></div>
+        ${r.formaPagamento ? `<div class="pgto-row"><span class="lbl">Forma de pagamento:</span><span class="pgto-tag">${escapeHtml(r.formaPagamento)}</span></div>` : ''}
+      </div>
+    </div>
+
+    <div class="garantia">
+      <div class="title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Termo de Garantia · ${LOJA.garantia}
+      </div>
+      <p>A garantia cobre exclusivamente o serviço executado e as peças substituídas, conforme descrito acima. <strong>Não cobre</strong> danos por mau uso, queda, contato com líquido, oxidação ou tentativa de reparo por terceiros. Ao retirar o aparelho, o cliente declara que o serviço foi executado conforme solicitado e que está ciente das condições.</p>
+    </div>
+
+    <div class="assinaturas">
+      <div class="ass">
+        <div class="ass-line"></div>
+        <div class="ass-label">Cliente</div>
+        ${r.cliente?.nome ? `<div class="ass-name">${escapeHtml(r.cliente.nome)}</div>` : ''}
+      </div>
+      <div class="ass">
+        <div class="ass-line"></div>
+        <div class="ass-label">Técnico responsável</div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div class="name">${LOJA.nome}</div>
+      <div class="addr">${LOJA.endereco}</div>
+      <div class="legal">Documento sem valor fiscal · Comprovante de prestação de serviço</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>`;
+
+  const blob = new Blob([html], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const win = window.open(url, '_blank');
+  if (!win) toast('Permita popups pra abrir a nota', 'err');
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+window.generateNota = generateNota;
+
+
 async function quickAction(action, id) {
   const r = STATE.rows.find(x => x.id === id);
   if (!r) return;
@@ -2530,6 +3152,7 @@ async function quickAction(action, id) {
   if (action === 'ready') { const res = await changeStatus(id, 'PRONTO'); if (res.error) return toast(res.error, 'err'); toast(`✓ ${r.modelo}: pronto`, 'ok'); return loadAll(); }
   if (action === 'edit') return openForm(id);
   if (action === 'wpp') return openWhatsApp(r);
+  if (action === 'nota') return generateNota(id);
   if (action === 'delete') {
     confirmDialog({ title: 'Excluir aparelho?', message: `${r.modelo} ${r.cor||''}${r.cliente?.nome ? ' — ' + r.cliente.nome : ''}.`, okLabel: 'Excluir', onConfirm: async () => {
       const res = await deleteAparelhoById(id);
@@ -2585,6 +3208,7 @@ function goTo(page) {
     dashboard: ['Dashboard', 'Visão geral da operação'],
     aparelhos: ['Aparelhos', 'Cadastro e gestão'],
     clientes: ['Clientes', 'Base de contatos'],
+    historico: ['Histórico de reparos', 'Concluídos e detecção de retornos'],
     logs: ['Logs', 'Histórico de atividades'],
   };
   const t = titles[page] || ['', ''];
@@ -2592,6 +3216,7 @@ function goTo(page) {
   document.getElementById('pageSub').textContent = t[1];
   applyAndRender();
   if (page === 'logs') loadLogs();
+  if (page === 'historico') renderHistorico();
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -2689,6 +3314,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById(id).addEventListener('change', renderLogs);
   });
   document.getElementById('searchLog').addEventListener('input', renderLogs);
+
+  // Filtros e clique do histórico
+  ['histMonth','histReturn'].forEach(id => {
+    document.getElementById(id)?.addEventListener('change', renderHistorico);
+  });
+  document.getElementById('searchHist')?.addEventListener('input', renderHistorico);
+  document.getElementById('histBody')?.addEventListener('click', e => {
+    const btn = e.target.closest('[data-hist-detail]');
+    if (btn) openDetail(parseInt(btn.dataset.histDetail));
+  });
   document.getElementById('clientesBody').addEventListener('click', e => { const btn = e.target.closest('[data-caction]'); if (!btn) return; clientAction(btn.dataset.caction, parseInt(btn.dataset.cid)); });
   document.querySelectorAll('[data-close]').forEach(el => el.addEventListener('click', () => el.closest('.modal-backdrop').classList.remove('open')));
   document.getElementById('btnSaveAparelho').addEventListener('click', saveForm);
