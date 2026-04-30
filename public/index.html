@@ -458,12 +458,65 @@ button{font-family:inherit}
 .section-title .rule{flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent)}
 
 /* ============================================================
-   KPI CARDS
+   DASH GREETING
    ============================================================ */
-.kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
-@media(max-width:1400px){.kpi-grid{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:780px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:480px){.kpi-grid{grid-template-columns:1fr}}
+.dash-greeting{
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:24px;
+  padding:4px 0;
+  position:relative;
+}
+.dash-greeting-text h1{
+  font-size:28px; font-weight:600;
+  font-family:'Bricolage Grotesque';
+  letter-spacing:-.03em;
+  background:linear-gradient(180deg, var(--text-1), var(--text-2));
+  -webkit-background-clip:text; background-clip:text;
+  -webkit-text-fill-color:transparent;
+  line-height:1.1;
+}
+.dash-greeting-text p{
+  font-size:13px; color:var(--text-3);
+  margin-top:6px;
+  font-family:'Geist Mono';
+  font-feature-settings:"ss01";
+}
+.dash-greeting-text p strong{color:var(--brand);font-weight:500}
+.dash-greeting-pulse{
+  width:10px; height:10px;
+  border-radius:50%;
+  background:var(--success);
+  box-shadow:0 0 0 3px rgba(52,211,153,.15), 0 0 12px var(--success);
+  animation:pulse 2s ease-in-out infinite;
+  flex-shrink:0;
+}
+
+/* ============================================================
+   KPI GRID — hero layout
+   ============================================================ */
+.kpi-grid{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr 1fr;gap:14px}
+@media(max-width:1400px){.kpi-grid{grid-template-columns:1.4fr 1fr 1fr 1fr;} .kpi-grid .kpi:nth-child(5){display:none}}
+@media(max-width:900px){.kpi-grid{grid-template-columns:1fr 1fr;} .kpi-grid .kpi-hero{grid-column:span 2}}
+@media(max-width:480px){.kpi-grid{grid-template-columns:1fr} .kpi-grid .kpi-hero{grid-column:span 1}}
+
+.kpi-hero{
+  background:linear-gradient(135deg, rgba(251,191,36,.08) 0%, var(--bg-1) 50%, var(--bg-2) 100%) !important;
+  border-color:var(--brand-line) !important;
+  position:relative;
+  overflow:hidden;
+}
+.kpi-hero::before{height:2px !important;background:linear-gradient(90deg, var(--brand-light), var(--brand-dark), transparent) !important}
+.kpi-hero .label{font-size:11px}
+.kpi-hero .value{
+  font-size:56px !important;
+  margin-top:10px !important;
+  background:linear-gradient(180deg, #fde388 0%, var(--brand) 50%, var(--brand-dark) 100%) !important;
+  -webkit-background-clip:text; background-clip:text;
+  -webkit-text-fill-color:transparent;
+  text-shadow:0 0 40px var(--brand-glow);
+}
+.kpi-hero .meta{font-size:12px}
+@media(max-width:900px){.kpi-hero .value{font-size:48px !important}}
 
 .kpi{
   background:linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%);
@@ -643,6 +696,12 @@ button{font-family:inherit}
   border-radius:var(--r-xl);
   overflow:hidden;
   box-shadow:var(--shadow-sm);
+  position:relative;
+}
+.table-card::before{
+  content:""; position:absolute; top:0; left:0; right:0; height:1px;
+  background:linear-gradient(90deg, transparent, var(--brand-line), transparent);
+  z-index:2; pointer-events:none;
 }
 .table-toolbar{
   padding:14px 18px;
@@ -719,7 +778,8 @@ tbody tr.fresh td{
   letter-spacing:.01em;
 }
 .tag.s-pronto{background:rgba(52,211,153,.10);color:var(--success);border-color:rgba(52,211,153,.25)}
-.tag.s-processo{background:rgba(251,191,36,.10);color:var(--brand);border-color:rgba(251,191,36,.28)}
+.tag.s-processo{background:rgba(251,191,36,.10);color:var(--brand);border-color:rgba(251,191,36,.28);position:relative;padding-left:18px}
+.tag.s-processo::before{content:"";position:absolute;left:7px;top:50%;transform:translateY(-50%);width:6px;height:6px;border-radius:50%;background:var(--brand);box-shadow:0 0 6px var(--brand);animation:pulse 1.5s ease-in-out infinite}
 .tag.s-fazer{background:rgba(96,165,250,.10);color:var(--info);border-color:rgba(96,165,250,.25)}
 .tag.s-verificar{background:rgba(167,139,250,.10);color:var(--violet);border-color:rgba(167,139,250,.25)}
 .tag.s-bloqueado{background:rgba(251,113,133,.12);color:var(--danger);border-color:rgba(251,113,133,.28)}
@@ -941,7 +1001,7 @@ tbody tr.fresh td{
 .skel-num{height:32px;border-radius:var(--r-sm);width:70%}
 
 .kpi.clickable{cursor:pointer}
-.kpi.clickable:active{transform:translateY(0)}
+.kpi.clickable:active{transform:translateY(2px) !important;transition:transform .05s !important;box-shadow:var(--shadow-xs) !important}
 .kpi.clickable:hover::before{background:linear-gradient(90deg, transparent, var(--brand-line), transparent);height:2px}
 
 /* Detail timeline */
@@ -1049,12 +1109,23 @@ footer{
 
     <!-- DASHBOARD -->
     <div id="page-dashboard" class="page active">
+      <div class="dash-greeting" id="dashGreeting">
+        <div class="dash-greeting-text">
+          <h1 id="greetingTitle">Olá</h1>
+          <p id="greetingSub">—</p>
+        </div>
+        <div class="dash-greeting-pulse"></div>
+      </div>
       <div class="kpi-grid">
-        <div class="kpi clickable" data-kpi="all"><div class="label">No fluxo</div><div class="value mono" id="kpiTotal">—</div><div class="meta" id="kpiTotalMeta">total</div></div>
-        <div class="kpi pending clickable" data-kpi="pending"><div class="label">Pendentes</div><div class="value mono" id="kpiPending">—</div><div class="meta" id="kpiPendingMeta">a fazer + em processo</div></div>
-        <div class="kpi ready clickable" data-kpi="ready"><div class="label">Prontos</div><div class="value mono" id="kpiReady">—</div><div class="meta" id="kpiReadyMeta">no período</div></div>
-        <div class="kpi waiting clickable" data-kpi="waiting"><div class="label">Aguardando retirada</div><div class="value mono" id="kpiWaiting">—</div><div class="meta" id="kpiWaitingMeta">prontos sem saída</div></div>
-        <div class="kpi accent"><div class="label">Tempo médio</div><div class="value mono small" id="kpiAvgTime">—</div><div class="meta" id="kpiAvgTimeMeta">de reparo</div></div>
+        <div class="kpi kpi-hero clickable" data-kpi="all">
+          <div class="label">No fluxo</div>
+          <div class="value mono" id="kpiTotal"><span class="skeleton skel-num" style="display:inline-block;width:120px;height:48px"></span></div>
+          <div class="meta" id="kpiTotalMeta">total · todo o período</div>
+        </div>
+        <div class="kpi pending clickable" data-kpi="pending"><div class="label">Pendentes</div><div class="value mono" id="kpiPending"><span class="skeleton skel-num" style="display:inline-block;width:60px;height:24px"></span></div><div class="meta" id="kpiPendingMeta">a fazer + em processo</div></div>
+        <div class="kpi ready clickable" data-kpi="ready"><div class="label">Prontos</div><div class="value mono" id="kpiReady"><span class="skeleton skel-num" style="display:inline-block;width:60px;height:24px"></span></div><div class="meta" id="kpiReadyMeta">no período</div></div>
+        <div class="kpi waiting clickable" data-kpi="waiting"><div class="label">Aguardando retirada</div><div class="value mono" id="kpiWaiting"><span class="skeleton skel-num" style="display:inline-block;width:60px;height:24px"></span></div><div class="meta" id="kpiWaitingMeta">prontos sem saída</div></div>
+        <div class="kpi accent"><div class="label">Tempo médio</div><div class="value mono small" id="kpiAvgTime"><span class="skeleton skel-num" style="display:inline-block;width:80px;height:20px"></span></div><div class="meta" id="kpiAvgTimeMeta">de reparo</div></div>
       </div>
 
       <div class="section-title"><h2>Alertas operacionais</h2><span class="rule"></span></div>
@@ -1190,8 +1261,12 @@ footer{
     </div>
 
     <footer>
-      <div>Fast Repair · Mids</div>
       <div class="mono" id="lastUpdate">—</div>
+      <div style="display:flex;align-items:center;gap:14px">
+        <span class="mono" style="color:var(--text-4);font-size:11px">v1.2</span>
+        <span style="color:var(--text-4)">·</span>
+        <span class="mono" style="color:var(--text-3);font-size:11px">Mids · Santos/SP</span>
+      </div>
     </footer>
   </div>
 </div>
@@ -1774,7 +1849,7 @@ function applyFilters() {
 }
 function applyAndRender() {
   applyFilters();
-  if (STATE.currentPage==='dashboard') { renderKPIs(); renderInsights(); renderCharts(); }
+  if (STATE.currentPage==='dashboard') { updateGreeting(); renderKPIs(); renderInsights(); renderCharts(); }
   else if (STATE.currentPage==='aparelhos') renderTable();
   else if (STATE.currentPage==='clientes') renderClientes();
   updateNavBadges();
@@ -1782,6 +1857,27 @@ function applyAndRender() {
 function updateNavBadges() {
   document.getElementById('navBadgeAparelhos').textContent = fmtInt(STATE.rows.length);
   document.getElementById('navBadgeClientes').textContent = fmtInt(STATE.clients.length);
+}
+
+function updateGreeting() {
+  const h = new Date().getHours();
+  const greet = h < 5 ? 'Boa madrugada' : h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
+  const name = STATE.user?.email?.split('@')[0]?.split('.')[0] || '';
+  const nameCap = name.charAt(0).toUpperCase() + name.slice(1);
+  document.getElementById('greetingTitle').textContent = `${greet}${nameCap ? ', ' + nameCap : ''} 👋`;
+
+  // Subtítulo dinâmico
+  const today = todayISO();
+  const todayIn = STATE.rows.filter(r => r.dataChegou === today).length;
+  const ready = STATE.rows.filter(r => isWaiting(r)).length;
+  const aging = STATE.rows.filter(r => isPending(r) && r.diasEmAberto != null && r.diasEmAberto >= CONFIG.AGING_DAYS).length;
+
+  let parts = [];
+  if (todayIn > 0) parts.push(`${todayIn} aparelho${todayIn>1?'s':''} entr${todayIn>1?'aram':'ou'} hoje`);
+  if (ready > 0) parts.push(`<strong>${ready}</strong> aguardando retirada`);
+  if (aging > 0) parts.push(`<strong>${aging}</strong> parado${aging>1?'s':''} há +3 dias`);
+  if (!parts.length) parts.push('tudo em ordem por aqui');
+  document.getElementById('greetingSub').innerHTML = parts.join(' · ');
 }
 
 const isPending = r => { const n = norm(r.situacao); return n.includes('fazer')||n.includes('processo')||n.includes('verificar')||(!n && r._dataChegou && !r._dataSaida); };
