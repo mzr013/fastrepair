@@ -290,7 +290,7 @@ button{font-family:inherit}
   padding:20px 18px;
   border-bottom:1px solid var(--border);
 }
-.sidebar-brand .brand-mark{width:36px;height:36px;font-size:18px;border-radius:var(--r-md)}
+.sidebar-brand .brand-mark{width:42px;height:42px;font-size:18px;border-radius:var(--r-md)}
 .sidebar-brand .name{font-size:17px;font-weight:700;letter-spacing:-.025em;font-family:'Bricolage Grotesque';line-height:1}
 .sidebar-brand .sub{font-size:10px;color:var(--text-3);font-family:'Geist Mono';text-transform:uppercase;letter-spacing:.18em;margin-top:3px}
 
@@ -328,7 +328,10 @@ button{font-family:inherit}
   border-radius:0 var(--r-xs) var(--r-xs) 0;
   box-shadow:0 0 8px var(--brand-glow);
 }
-.nav-item .icon{width:16px;text-align:center;flex-shrink:0;font-size:14px}
+.nav-item .icon{width:18px;height:18px;flex-shrink:0;display:grid;place-items:center;color:var(--text-3);transition:color .15s}
+.nav-item .icon svg{width:17px;height:17px;display:block}
+.nav-item:hover .icon{color:var(--text-1)}
+.nav-item.active .icon{color:var(--brand)}
 .nav-item .badge{
   margin-left:auto;
   background:var(--bg-3);
@@ -991,13 +994,13 @@ tbody tr.fresh td{
       </div>
     </div>
     <nav class="nav">
-      <div class="nav-item active" data-page="dashboard"><span class="icon">▣</span> Dashboard</div>
-      <div class="nav-item" data-page="aparelhos"><span class="icon">▤</span> Aparelhos <span class="badge mono" id="navBadgeAparelhos">0</span></div>
-      <div class="nav-item" data-page="clientes"><span class="icon">◉</span> Clientes <span class="badge mono" id="navBadgeClientes">0</span></div>
-      <div class="nav-item" data-page="logs" id="navLogs" style="display:none"><span class="icon">⏱</span> Logs</div>
+      <div class="nav-item active" data-page="dashboard"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg></span> Dashboard</div>
+      <div class="nav-item" data-page="aparelhos"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2.5"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></span> Aparelhos <span class="badge mono" id="navBadgeAparelhos">0</span></div>
+      <div class="nav-item" data-page="clientes"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span> Clientes <span class="badge mono" id="navBadgeClientes">0</span></div>
+      <div class="nav-item" data-page="logs" id="navLogs" style="display:none"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span> Logs</div>
       <div class="nav-section">Ações rápidas</div>
-      <div class="nav-item" id="navNew"><span class="icon">+</span> Novo aparelho</div>
-      <div class="nav-item" id="navNewClient"><span class="icon">+</span> Novo cliente</div>
+      <div class="nav-item" id="navNew"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span> Novo aparelho</div>
+      <div class="nav-item" id="navNewClient"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg></span> Novo cliente</div>
     </nav>
     <div class="sidebar-foot">
       <div class="avatar" id="userAvatar">?</div>
